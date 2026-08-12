@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" role="img" aria-labelledby="vm-d03-title vm-d03-desc">
+      <title id="vm-d03-title">Core architectural layers</title>
+      <desc id="vm-d03-desc">What may depend on what inside VideoMesh?</desc>
+      <defs>
+      <marker id="vm-d03-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#A7B0BB"/></marker>
+      <marker id="vm-d03-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#E47A36"/></marker>
+      <marker id="vm-d03-arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#7299C5"/></marker>
+      <marker id="vm-d03-arrow-open" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polyline points="0 0,8 3,0 6" fill="none" stroke="#A7B0BB" stroke-width="1.2"/></marker>
+    </defs>
+      <style>
+.title{font-family:'Instrument Serif',Georgia,serif;font-size:40px;font-weight:400;fill:#F3F5F7;}
+.eyebrow{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:8px;letter-spacing:1.8px;fill:#77828E;}
+.subtitle{font-family:'Geist',Inter,Arial,sans-serif;font-size:12px;fill:#A7B0BB;}
+.node-name{font-family:'Geist',Inter,Arial,sans-serif;font-size:16px;font-weight:600;fill:#F3F5F7;}
+.node-small{font-family:'Geist',Inter,Arial,sans-serif;font-size:12px;font-weight:600;fill:#F3F5F7;}
+.mono{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:12px;fill:#A7B0BB;}
+.mono-small{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:8px;fill:#77828E;letter-spacing:.4px;}
+.tag{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:8px;fill:#77828E;letter-spacing:1.2px;}
+.arrow-label{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:8px;fill:#77828E;letter-spacing:.8px;}
+.callout{font-family:'Instrument Serif',Georgia,serif;font-size:16px;font-style:italic;fill:#A7B0BB;}
+.footer{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:8px;fill:#77828E;letter-spacing:.5px;}
+.entity-field{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:8px;fill:#A7B0BB;}
+</style>
+      <rect width="1280" height="720" fill="#111418"/>
+      <text x="48" y="44" class="eyebrow">VM-D03 · VIDEOMESH V1.1 · CANONICAL VIEW</text>
+    <text x="48" y="88" class="title">Core architectural layers</text>
+    <text x="48" y="116" class="subtitle">What may depend on what inside VideoMesh?</text>
+    <line x1="48" y1="136" x2="1232" y2="136" stroke="#2C343E" stroke-width="1"/>
+      <line x1="92" y1="568" x2="92" y2="220" fill="none" stroke="#E47A36" stroke-width="1.4" marker-end="url(#vm-d03-arrow-accent)"/><text x="68" y="396" class="eyebrow" transform="rotate(-90 68 396)" text-anchor="middle">DEPENDENCY DIRECTION UP</text><rect x="176" y="188" width="944" height="84" rx="8" fill="rgba(228,122,54,0.10)" stroke="#E47A36" stroke-width="1.4"/><text x="204" y="220" class="eyebrow">L0</text><text x="332" y="228" class="node-name">DOMAIN</text><text x="1092" y="228" class="mono-small" text-anchor="end">Artifact · CameraSet · FrameGraph · Scale</text><rect x="176" y="284" width="944" height="84" rx="8" fill="#181D23" stroke="#46515E" stroke-width="1"/><text x="204" y="316" class="eyebrow">L1</text><text x="332" y="324" class="node-name">PORTS</text><text x="1092" y="324" class="mono-small" text-anchor="end">replaceable contracts only</text><rect x="176" y="380" width="944" height="84" rx="8" fill="#181D23" stroke="#46515E" stroke-width="1"/><text x="204" y="412" class="eyebrow">L2</text><text x="332" y="420" class="node-name">APPLICATION</text><text x="1092" y="420" class="mono-small" text-anchor="end">use cases · orchestration · policy</text><rect x="176" y="476" width="944" height="84" rx="8" fill="#20262E" stroke="#46515E" stroke-width="1"/><text x="204" y="508" class="eyebrow">L3</text><text x="332" y="516" class="node-name">PROVIDERS / ADAPTERS</text><text x="1092" y="516" class="mono-small" text-anchor="end">FFmpeg · COLMAP · SoftSight · Blender · KTX2</text><rect x="824" y="584" width="296" height="48" rx="8" fill="rgba(196,139,134,0.06)" stroke="#C48B86" stroke-width="1" stroke-dasharray="5,4"/><text x="972" y="604" class="eyebrow" text-anchor="middle">FORBIDDEN</text><text x="972" y="620" class="mono-small" text-anchor="middle">domain imports provider implementations</text>
+      <line x1="48" y1="672" x2="1232" y2="672" stroke="#2C343E" stroke-width="1"/>
+    <text x="48" y="700" class="footer">SOURCE · VIDEOMESH_V1_1_IMPLEMENTATION_ROADMAP.md · contrato-videomesh.md</text>
+    <text x="1232" y="700" class="footer" text-anchor="end">VM-D03 · 2026-08-12</text>
+    </svg>

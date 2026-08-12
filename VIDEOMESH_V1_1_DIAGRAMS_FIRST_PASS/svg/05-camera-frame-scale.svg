@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" role="img" aria-labelledby="vm-d05-title vm-d05-desc">
+      <title id="vm-d05-title">Camera / frame / scale model</title>
+      <desc id="vm-d05-desc">How does backend camera data become canonical geometry context?</desc>
+      <defs>
+      <marker id="vm-d05-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#A7B0BB"/></marker>
+      <marker id="vm-d05-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#E47A36"/></marker>
+      <marker id="vm-d05-arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#7299C5"/></marker>
+      <marker id="vm-d05-arrow-open" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polyline points="0 0,8 3,0 6" fill="none" stroke="#A7B0BB" stroke-width="1.2"/></marker>
+    </defs>
+      <style>
+.title{font-family:'Instrument Serif',Georgia,serif;font-size:40px;font-weight:400;fill:#F3F5F7;}
+.eyebrow{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:8px;letter-spacing:1.8px;fill:#77828E;}
+.subtitle{font-family:'Geist',Inter,Arial,sans-serif;font-size:12px;fill:#A7B0BB;}
+.node-name{font-family:'Geist',Inter,Arial,sans-serif;font-size:16px;font-weight:600;fill:#F3F5F7;}
+.node-small{font-family:'Geist',Inter,Arial,sans-serif;font-size:12px;font-weight:600;fill:#F3F5F7;}
+.mono{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:12px;fill:#A7B0BB;}
+.mono-small{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:8px;fill:#77828E;letter-spacing:.4px;}
+.tag{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:8px;fill:#77828E;letter-spacing:1.2px;}
+.arrow-label{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:8px;fill:#77828E;letter-spacing:.8px;}
+.callout{font-family:'Instrument Serif',Georgia,serif;font-size:16px;font-style:italic;fill:#A7B0BB;}
+.footer{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:8px;fill:#77828E;letter-spacing:.5px;}
+.entity-field{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:8px;fill:#A7B0BB;}
+</style>
+      <rect width="1280" height="720" fill="#111418"/>
+      <text x="48" y="44" class="eyebrow">VM-D05 · VIDEOMESH V1.1 · CANONICAL VIEW</text>
+    <text x="48" y="88" class="title">Camera / frame / scale model</text>
+    <text x="48" y="116" class="subtitle">How does backend camera data become canonical geometry context?</text>
+    <line x1="48" y1="136" x2="1232" y2="136" stroke="#2C343E" stroke-width="1"/>
+      <rect x="64" y="176" width="252" height="368" rx="8" fill="rgba(243,245,247,0.015)" stroke="#2C343E" stroke-width="1"/>
+    <rect x="76" y="184" width="64" height="16" rx="4" fill="#111418"/>
+    <text x="84" y="196" class="eyebrow">BACKEND</text><rect x="380" y="176" width="836" height="368" rx="8" fill="rgba(243,245,247,0.015)" stroke="#2C343E" stroke-width="1"/>
+    <rect x="392" y="184" width="176" height="16" rx="4" fill="#111418"/>
+    <text x="400" y="196" class="eyebrow">CANONICAL GEOMETRY CONTEXT</text><line x1="284" y1="320" x2="380" y2="320" fill="none" stroke="#7299C5" stroke-width="1.4" marker-end="url(#vm-d05-arrow-link)"/><line x1="540" y1="304" x2="664" y2="304" fill="none" stroke="#E47A36" stroke-width="1.4" marker-end="url(#vm-d05-arrow-accent)"/><path d="M 536,344 H 592 Q 600,344 600,352 V 492 Q 600,500 608,500 H 664" fill="none" stroke="#E47A36" stroke-width="1.4" marker-end="url(#vm-d05-arrow-accent)"/><line x1="824" y1="320" x2="952" y2="320" fill="none" stroke="#A7B0BB" stroke-width="1.4" stroke-dasharray="5,4"/><rect x="292.0" y="292" width="80" height="12" rx="4" fill="#111418"/><text x="332" y="304" class="arrow-label" text-anchor="middle">NORMALIZE</text><rect x="560.0" y="276" width="80" height="12" rx="4" fill="#111418"/><text x="600" y="288" class="arrow-label" text-anchor="middle">CAMERAS</text><rect x="584.0" y="472" width="88" height="12" rx="4" fill="#111418"/><text x="628" y="484" class="arrow-label" text-anchor="middle">FRAMEGRAPH</text><rect x="92" y="268" width="192" height="104" rx="8" fill="#181D23" stroke="#46515E" stroke-width="1"/>
+<rect x="104" y="276" width="64" height="16" rx="4" fill="none" stroke="#46515E" stroke-opacity="0.55" stroke-width="1"/>
+<text x="136.0" y="288" class="tag" text-anchor="middle">BACKEND</text>
+<text x="188.0" y="316.0" class="node-small" text-anchor="middle">COLMAP native camera</text>
+<text x="188.0" y="340.0" class="mono-small" text-anchor="middle">native pose + camera model</text><rect x="380" y="268" width="160" height="104" rx="8" fill="rgba(228,122,54,0.10)" stroke="#E47A36" stroke-width="1.4"/>
+<rect x="392" y="276" width="64" height="16" rx="4" fill="none" stroke="#E47A36" stroke-opacity="0.55" stroke-width="1"/>
+<text x="424.0" y="288" class="tag" text-anchor="middle">ADAPTER</text>
+<text x="460.0" y="316.0" class="node-small" text-anchor="middle">ColmapAdapter</text>
+<text x="460.0" y="340.0" class="mono-small" text-anchor="middle">absorbs backend ambiguity</text><rect x="664" y="268" width="160" height="104" rx="8" fill="#181D23" stroke="#A7B0BB" stroke-width="1"/>
+<rect x="676" y="276" width="56" height="16" rx="4" fill="none" stroke="#A7B0BB" stroke-opacity="0.55" stroke-width="1"/>
+<text x="704.0" y="288" class="tag" text-anchor="middle">DOMAIN</text>
+<text x="744.0" y="316.0" class="node-small" text-anchor="middle">CameraSet</text>
+<text x="744.0" y="340.0" class="mono-small" text-anchor="middle">worldFromCamera</text><rect x="952" y="268" width="160" height="104" rx="8" fill="#181D23" stroke="#A7B0BB" stroke-width="1"/>
+<rect x="964" y="276" width="56" height="16" rx="4" fill="none" stroke="#A7B0BB" stroke-opacity="0.55" stroke-width="1"/>
+<text x="992.0" y="288" class="tag" text-anchor="middle">DOMAIN</text>
+<text x="1032.0" y="316.0" class="node-small" text-anchor="middle">CameraImageSpace</text>
+<text x="1032.0" y="340.0" class="mono-small" text-anchor="middle">same pixel grid · intrinsics</text><rect x="664" y="456" width="160" height="88" rx="8" fill="#181D23" stroke="#A7B0BB" stroke-width="1"/>
+<rect x="676" y="464" width="56" height="16" rx="4" fill="none" stroke="#A7B0BB" stroke-opacity="0.55" stroke-width="1"/>
+<text x="704.0" y="476" class="tag" text-anchor="middle">DOMAIN</text>
+<text x="744.0" y="496.0" class="node-small" text-anchor="middle">FrameGraph</text>
+<text x="744.0" y="520.0" class="mono-small" text-anchor="middle">T_target_from_source</text><rect x="952" y="456" width="160" height="88" rx="8" fill="#181D23" stroke="#A7B0BB" stroke-width="1"/>
+<rect x="964" y="464" width="56" height="16" rx="4" fill="none" stroke="#A7B0BB" stroke-opacity="0.55" stroke-width="1"/>
+<text x="992.0" y="476" class="tag" text-anchor="middle">DOMAIN</text>
+<text x="1032.0" y="496.0" class="node-small" text-anchor="middle">Scale</text>
+<text x="1032.0" y="520.0" class="mono-small" text-anchor="middle">S13 · priors + normalized reconstruction</text><rect x="404" y="572" width="788" height="52" rx="8" fill="#181D23" stroke="#2C343E"/><text x="504" y="604" class="eyebrow" text-anchor="middle">CAMERA</text><text x="700" y="604" class="eyebrow" text-anchor="middle">RECONSTRUCTION</text><text x="896" y="604" class="eyebrow" text-anchor="middle">ASSET_CANONICAL</text><text x="1092" y="604" class="eyebrow" text-anchor="middle">PRODUCTION</text><text x="80" y="584" class="callout">Monocular SfM does not imply absolute metric scale.</text>
+      <line x1="48" y1="672" x2="1232" y2="672" stroke="#2C343E" stroke-width="1"/>
+    <text x="48" y="700" class="footer">SOURCE · VIDEOMESH_V1_1_IMPLEMENTATION_ROADMAP.md · contrato-videomesh.md</text>
+    <text x="1232" y="700" class="footer" text-anchor="end">VM-D05 · 2026-08-12</text>
+    </svg>

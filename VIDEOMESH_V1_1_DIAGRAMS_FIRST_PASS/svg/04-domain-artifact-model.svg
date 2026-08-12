@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" role="img" aria-labelledby="vm-d04-title vm-d04-desc">
+      <title id="vm-d04-title">Domain + artifact model</title>
+      <desc id="vm-d04-desc">What are the core information objects and how does Artifact specialize?</desc>
+      <defs>
+      <marker id="vm-d04-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#A7B0BB"/></marker>
+      <marker id="vm-d04-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#E47A36"/></marker>
+      <marker id="vm-d04-arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#7299C5"/></marker>
+      <marker id="vm-d04-arrow-open" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polyline points="0 0,8 3,0 6" fill="none" stroke="#A7B0BB" stroke-width="1.2"/></marker>
+    </defs>
+      <style>
+.title{font-family:'Instrument Serif',Georgia,serif;font-size:40px;font-weight:400;fill:#F3F5F7;}
+.eyebrow{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:8px;letter-spacing:1.8px;fill:#77828E;}
+.subtitle{font-family:'Geist',Inter,Arial,sans-serif;font-size:12px;fill:#A7B0BB;}
+.node-name{font-family:'Geist',Inter,Arial,sans-serif;font-size:16px;font-weight:600;fill:#F3F5F7;}
+.node-small{font-family:'Geist',Inter,Arial,sans-serif;font-size:12px;font-weight:600;fill:#F3F5F7;}
+.mono{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:12px;fill:#A7B0BB;}
+.mono-small{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:8px;fill:#77828E;letter-spacing:.4px;}
+.tag{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:8px;fill:#77828E;letter-spacing:1.2px;}
+.arrow-label{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:8px;fill:#77828E;letter-spacing:.8px;}
+.callout{font-family:'Instrument Serif',Georgia,serif;font-size:16px;font-style:italic;fill:#A7B0BB;}
+.footer{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:8px;fill:#77828E;letter-spacing:.5px;}
+.entity-field{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:8px;fill:#A7B0BB;}
+</style>
+      <rect width="1280" height="720" fill="#111418"/>
+      <text x="48" y="44" class="eyebrow">VM-D04 · VIDEOMESH V1.1 · CANONICAL VIEW</text>
+    <text x="48" y="88" class="title">Domain + artifact model</text>
+    <text x="48" y="116" class="subtitle">What are the core information objects and how does Artifact specialize?</text>
+    <line x1="48" y1="136" x2="1232" y2="136" stroke="#2C343E" stroke-width="1"/>
+      <line x1="320" y1="228" x2="520" y2="228" fill="none" stroke="#A7B0BB" stroke-width="1.4"/><line x1="760" y1="228" x2="960" y2="228" fill="none" stroke="#A7B0BB" stroke-width="1.4"/><path d="M 560,276 V 296 Q 560,304 552,304 H 228 Q 220,304 220,312 V 360" fill="none" stroke="#A7B0BB" stroke-width="1.4"/><path d="M 608,276 V 312 Q 608,320 600,320 H 468 Q 460,320 460,328 V 360" fill="none" stroke="#A7B0BB" stroke-width="1.4"/><path d="M 672,276 V 328 Q 672,336 680,336 H 692 Q 700,336 700,344 V 360" fill="none" stroke="#A7B0BB" stroke-width="1.4"/><path d="M 720,276 V 344 Q 720,352 728,352 H 1052 Q 1060,352 1060,360" fill="none" stroke="#A7B0BB" stroke-width="1.4"/><line x1="1060" y1="456" x2="1060" y2="532" fill="none" stroke="#A7B0BB" stroke-width="1.4"/><text x="344" y="216" class="arrow-label" text-anchor="middle">1..*</text><text x="936" y="216" class="arrow-label" text-anchor="middle">1..*</text><text x="232" y="344" class="arrow-label" text-anchor="middle">1..*</text><text x="472" y="344" class="arrow-label" text-anchor="middle">1..*</text><text x="712" y="344" class="arrow-label" text-anchor="middle">1..*</text><text x="1016" y="344" class="arrow-label" text-anchor="middle">0..*</text><text x="1072" y="508" class="arrow-label" text-anchor="middle">0..1</text><rect x="120" y="180" width="200" height="96" rx="8" fill="#181D23" stroke="#A7B0BB" stroke-width="1"/>
+<line x1="120" y1="212" x2="320" y2="212" stroke="#A7B0BB" stroke-opacity="0.45" stroke-width="1"/>
+<text x="132" y="200" class="eyebrow">ENTITY</text>
+<text x="308" y="200" class="node-small" text-anchor="end">StageRun</text>
+<text x="132" y="232" class="entity-field"># stageId</text>
+<text x="132" y="248" class="entity-field">status</text>
+<text x="132" y="264" class="entity-field">determinism</text><rect x="520" y="180" width="240" height="80" rx="8" fill="rgba(228,122,54,0.10)" stroke="#E47A36" stroke-width="1.4"/>
+<line x1="520" y1="212" x2="760" y2="212" stroke="#E47A36" stroke-opacity="0.45" stroke-width="1"/>
+<text x="532" y="200" class="eyebrow">ENTITY</text>
+<text x="748" y="200" class="node-small" text-anchor="end">Project</text>
+<text x="532" y="232" class="entity-field"># projectId</text>
+<text x="532" y="248" class="entity-field">lifecycle</text><rect x="960" y="164" width="200" height="112" rx="8" fill="#181D23" stroke="#A7B0BB" stroke-width="1"/>
+<line x1="960" y1="196" x2="1160" y2="196" stroke="#A7B0BB" stroke-opacity="0.45" stroke-width="1"/>
+<text x="972" y="184" class="eyebrow">ENTITY</text>
+<text x="1148" y="184" class="node-small" text-anchor="end">Artifact</text>
+<text x="972" y="216" class="entity-field"># artifactId</text>
+<text x="972" y="232" class="entity-field">type</text>
+<text x="972" y="248" class="entity-field">bytes · sha256</text>
+<text x="972" y="264" class="entity-field">TRIANGLE_MESH: purelyReconstructed</text><rect x="120" y="360" width="200" height="96" rx="8" fill="#181D23" stroke="#A7B0BB" stroke-width="1"/>
+<line x1="120" y1="392" x2="320" y2="392" stroke="#A7B0BB" stroke-opacity="0.45" stroke-width="1"/>
+<text x="132" y="380" class="eyebrow">ENTITY</text>
+<text x="308" y="380" class="node-small" text-anchor="end">ProviderRun</text>
+<text x="132" y="412" class="entity-field">provider</text>
+<text x="132" y="428" class="entity-field">version</text>
+<text x="132" y="444" class="entity-field">resources</text><rect x="360" y="360" width="200" height="96" rx="8" fill="#181D23" stroke="#A7B0BB" stroke-width="1"/>
+<line x1="360" y1="392" x2="560" y2="392" stroke="#A7B0BB" stroke-opacity="0.45" stroke-width="1"/>
+<text x="372" y="380" class="eyebrow">ENTITY</text>
+<text x="548" y="380" class="node-small" text-anchor="end">Metric</text>
+<text x="372" y="412" class="entity-field">value</text>
+<text x="372" y="428" class="entity-field">MeasurementClass</text>
+<text x="372" y="444" class="entity-field">ReproducibilityMode</text><rect x="600" y="360" width="200" height="96" rx="8" fill="#181D23" stroke="#A7B0BB" stroke-width="1"/>
+<line x1="600" y1="392" x2="800" y2="392" stroke="#A7B0BB" stroke-opacity="0.45" stroke-width="1"/>
+<text x="612" y="380" class="eyebrow">ENTITY</text>
+<text x="788" y="380" class="node-small" text-anchor="end">Diagnostic</text>
+<text x="612" y="412" class="entity-field">evidence</text>
+<text x="612" y="428" class="entity-field">reason</text>
+<text x="612" y="444" class="entity-field">nextAction</text><rect x="960" y="360" width="200" height="96" rx="8" fill="#181D23" stroke="#A7B0BB" stroke-width="1"/>
+<line x1="960" y1="392" x2="1160" y2="392" stroke="#A7B0BB" stroke-opacity="0.45" stroke-width="1"/>
+<text x="972" y="380" class="eyebrow">ENTITY</text>
+<text x="1148" y="380" class="node-small" text-anchor="end">Reconstruction</text>
+<text x="972" y="412" class="entity-field">CameraSet</text>
+<text x="972" y="428" class="entity-field">FrameGraph</text>
+<text x="972" y="444" class="entity-field">Scale</text><rect x="960" y="532" width="200" height="96" rx="8" fill="#181D23" stroke="#A7B0BB" stroke-width="1"/>
+<line x1="960" y1="564" x2="1160" y2="564" stroke="#A7B0BB" stroke-opacity="0.45" stroke-width="1"/>
+<text x="972" y="552" class="eyebrow">ENTITY</text>
+<text x="1148" y="552" class="node-small" text-anchor="end">ProductionAsset</text>
+<text x="972" y="584" class="entity-field">GLB</text>
+<text x="972" y="600" class="entity-field">LOD</text>
+<text x="972" y="616" class="entity-field">textures</text><text x="960" y="316" class="mono-small">Artifact type discriminator: POINT_CLOUD or TRIANGLE_MESH</text>
+      <line x1="48" y1="672" x2="1232" y2="672" stroke="#2C343E" stroke-width="1"/>
+    <text x="48" y="700" class="footer">SOURCE · VIDEOMESH_V1_1_IMPLEMENTATION_ROADMAP.md · contrato-videomesh.md</text>
+    <text x="1232" y="700" class="footer" text-anchor="end">VM-D04 · 2026-08-12</text>
+    </svg>

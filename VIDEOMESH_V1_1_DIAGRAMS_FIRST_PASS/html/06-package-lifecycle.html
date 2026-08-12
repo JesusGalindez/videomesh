@@ -1,0 +1,69 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=1280,initial-scale=1"><title>Package lifecycle</title><style>html,body{margin:0;width:100%;height:100%;background:#111418;overflow:hidden;}body{font-family:Arial,sans-serif}svg{display:block;width:1280px;height:720px}</style></head><body><!--
+Diagram-ID: VM-D06
+Diagram title: Package lifecycle
+Diagram type: State machine
+Source documents: VIDEOMESH_V1_1_IMPLEMENTATION_ROADMAP.md; contrato-videomesh.md; Pasted text(4).txt
+Generated date: 2026-08-12
+Architecture scope: Immutable package + separate consumer run state
+Status: canonical-view
+--><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" role="img" aria-labelledby="vm-d06-title vm-d06-desc">
+      <title id="vm-d06-title">Package lifecycle</title>
+      <desc id="vm-d06-desc">When is a package valid for SoftSight, and where does consumption state live?</desc>
+      <defs>
+      <marker id="vm-d06-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#A7B0BB"/></marker>
+      <marker id="vm-d06-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#E47A36"/></marker>
+      <marker id="vm-d06-arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#7299C5"/></marker>
+      <marker id="vm-d06-arrow-open" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polyline points="0 0,8 3,0 6" fill="none" stroke="#A7B0BB" stroke-width="1.2"/></marker>
+    </defs>
+      <style>
+.title{font-family:'Instrument Serif',Georgia,serif;font-size:40px;font-weight:400;fill:#F3F5F7;}
+.eyebrow{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:8px;letter-spacing:1.8px;fill:#77828E;}
+.subtitle{font-family:'Geist',Inter,Arial,sans-serif;font-size:12px;fill:#A7B0BB;}
+.node-name{font-family:'Geist',Inter,Arial,sans-serif;font-size:16px;font-weight:600;fill:#F3F5F7;}
+.node-small{font-family:'Geist',Inter,Arial,sans-serif;font-size:12px;font-weight:600;fill:#F3F5F7;}
+.mono{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:12px;fill:#A7B0BB;}
+.mono-small{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:8px;fill:#77828E;letter-spacing:.4px;}
+.tag{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:8px;fill:#77828E;letter-spacing:1.2px;}
+.arrow-label{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:8px;fill:#77828E;letter-spacing:.8px;}
+.callout{font-family:'Instrument Serif',Georgia,serif;font-size:16px;font-style:italic;fill:#A7B0BB;}
+.footer{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:8px;fill:#77828E;letter-spacing:.5px;}
+.entity-field{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:8px;fill:#A7B0BB;}
+</style>
+      <rect width="1280" height="720" fill="#111418"/>
+      <text x="48" y="44" class="eyebrow">VM-D06 · VIDEOMESH V1.1 · CANONICAL VIEW</text>
+    <text x="48" y="88" class="title">Package lifecycle</text>
+    <text x="48" y="116" class="subtitle">When is a package valid for SoftSight, and where does consumption state live?</text>
+    <line x1="48" y1="136" x2="1232" y2="136" stroke="#2C343E" stroke-width="1"/>
+      <text x="72" y="180" class="eyebrow">PACKAGE LIFECYCLE</text><circle cx="120" cy="260" r="6" fill="#F3F5F7"/><line x1="120" y1="260" x2="320" y2="260" fill="none" stroke="#A7B0BB" stroke-width="1.4" marker-end="url(#vm-d06-arrow)"/><line x1="480" y1="260" x2="736" y2="260" fill="none" stroke="#E47A36" stroke-width="1.4" marker-end="url(#vm-d06-arrow-accent)"/><rect x="552.0" y="232" width="112" height="12" rx="4" fill="#111418"/><text x="608" y="244" class="arrow-label" text-anchor="middle">SEAL + RENAME</text><rect x="320" y="220" width="160" height="80" rx="8" fill="#181D23" stroke="#A7B0BB" stroke-width="1"/>
+<rect x="332" y="228" width="48" height="16" rx="4" fill="none" stroke="#A7B0BB" stroke-opacity="0.55" stroke-width="1"/>
+<text x="356.0" y="240" class="tag" text-anchor="middle">STATE</text>
+<text x="400.0" y="256.0" class="node-small" text-anchor="middle">WRITING</text>
+<text x="400.0" y="280.0" class="mono-small" text-anchor="middle">temp dir · same filesystem</text><rect x="736" y="220" width="160" height="80" rx="8" fill="rgba(228,122,54,0.10)" stroke="#E47A36" stroke-width="1.4"/>
+<rect x="748" y="228" width="48" height="16" rx="4" fill="none" stroke="#E47A36" stroke-opacity="0.55" stroke-width="1"/>
+<text x="772.0" y="240" class="tag" text-anchor="middle">STATE</text>
+<text x="816.0" y="256.0" class="node-small" text-anchor="middle">SEALED</text>
+<text x="816.0" y="280.0" class="mono-small" text-anchor="middle">manifest last · immutable forever</text><rect x="968" y="216" width="232" height="88" rx="8" fill="#181D23" stroke="#46515E" stroke-width="1" stroke-dasharray="5,4"/><text x="1084" y="244" class="eyebrow" text-anchor="middle">VISIBILITY, NOT A NEW STATE</text><text x="1084" y="268" class="node-small" text-anchor="middle">atomic rename publishes</text><text x="1084" y="288" class="mono-small" text-anchor="middle">package remains SEALED</text><line x1="896" y1="260" x2="968" y2="260" fill="none" stroke="#E47A36" stroke-width="1.4" stroke-dasharray="5,4"/><text x="608" y="328" class="mono-small" text-anchor="middle">artifacts > bytes/SHA256 > manifest last > atomic rename</text><line x1="72" y1="376" x2="1208" y2="376" stroke="#2C343E"/><text x="72" y="412" class="eyebrow">SOFTSIGHTRUN LIFECYCLE · CONSUMPTION LIVES HERE</text><circle cx="120" cy="500" r="6" fill="#F3F5F7"/><line x1="120" y1="500" x2="248" y2="500" fill="none" stroke="#A7B0BB" stroke-width="1.4" marker-end="url(#vm-d06-arrow)"/><line x1="392" y1="500" x2="512" y2="500" fill="none" stroke="#A7B0BB" stroke-width="1.4" marker-end="url(#vm-d06-arrow)"/><path d="M 656,484 H 752 Q 760,484 760,476 V 456 Q 760,448 768,448 H 888" fill="none" stroke="#E47A36" stroke-width="1.4" marker-end="url(#vm-d06-arrow-accent)"/><line x1="656" y1="500" x2="888" y2="500" fill="none" stroke="#A7B0BB" stroke-width="1.4" marker-end="url(#vm-d06-arrow)"/><path d="M 656,516 H 752 Q 760,516 760,524 V 544 Q 760,552 768,552 H 888" fill="none" stroke="#A7B0BB" stroke-width="1.4" marker-end="url(#vm-d06-arrow)"/><rect x="248" y="464" width="144" height="72" rx="8" fill="#181D23" stroke="#A7B0BB" stroke-width="1"/>
+<rect x="260" y="472" width="40" height="16" rx="4" fill="none" stroke="#A7B0BB" stroke-opacity="0.55" stroke-width="1"/>
+<text x="280.0" y="484" class="tag" text-anchor="middle">RUN</text>
+<text x="320.0" y="496.0" class="node-small" text-anchor="middle">PENDING</text>
+<text x="320.0" y="520.0" class="mono-small" text-anchor="middle">awaiting consumer</text><rect x="512" y="464" width="144" height="72" rx="8" fill="rgba(114,153,197,0.09)" stroke="#7299C5" stroke-width="1.3"/>
+<rect x="524" y="472" width="40" height="16" rx="4" fill="none" stroke="#7299C5" stroke-opacity="0.55" stroke-width="1"/>
+<text x="544.0" y="484" class="tag" text-anchor="middle">RUN</text>
+<text x="584.0" y="496.0" class="node-small" text-anchor="middle">RUNNING</text>
+<text x="584.0" y="520.0" class="mono-small" text-anchor="middle">SoftSight analysis</text><rect x="888" y="416" width="176" height="64" rx="8" fill="rgba(157,187,155,0.08)" stroke="#9DBB9B" stroke-width="1.2"/>
+<rect x="900" y="424" width="40" height="16" rx="4" fill="none" stroke="#9DBB9B" stroke-opacity="0.55" stroke-width="1"/>
+<text x="920.0" y="436" class="tag" text-anchor="middle">RUN</text>
+<text x="976.0" y="444.0" class="node-small" text-anchor="middle">COMPLETE</text>
+<text x="976.0" y="468.0" class="mono-small" text-anchor="middle">analysis finished</text><rect x="888" y="488" width="176" height="64" rx="8" fill="rgba(196,139,134,0.08)" stroke="#C48B86" stroke-width="1.2"/>
+<rect x="900" y="496" width="40" height="16" rx="4" fill="none" stroke="#C48B86" stroke-opacity="0.55" stroke-width="1"/>
+<text x="920.0" y="508" class="tag" text-anchor="middle">RUN</text>
+<text x="976.0" y="516.0" class="node-small" text-anchor="middle">ERROR</text>
+<text x="976.0" y="540.0" class="mono-small" text-anchor="middle">execution failure</text><rect x="888" y="560" width="176" height="64" rx="8" fill="#181D23" stroke="#46515E" stroke-width="1" stroke-dasharray="5,4"/>
+<rect x="900" y="568" width="40" height="16" rx="4" fill="none" stroke="#46515E" stroke-opacity="0.55" stroke-width="1"/>
+<text x="920.0" y="580" class="tag" text-anchor="middle">RUN</text>
+<text x="976.0" y="588.0" class="node-small" text-anchor="middle">UNSUPPORTED</text>
+<text x="976.0" y="612.0" class="mono-small" text-anchor="middle">capability mismatch</text><text x="1192" y="412" class="callout" text-anchor="end">No SEALED > CONSUMED package transition.</text>
+      <line x1="48" y1="672" x2="1232" y2="672" stroke="#2C343E" stroke-width="1"/>
+    <text x="48" y="700" class="footer">SOURCE · VIDEOMESH_V1_1_IMPLEMENTATION_ROADMAP.md · contrato-videomesh.md</text>
+    <text x="1232" y="700" class="footer" text-anchor="end">VM-D06 · 2026-08-12</text>
+    </svg></body></html>

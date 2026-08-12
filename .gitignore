@@ -1,0 +1,23 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.DS_Store
+dist/
+build/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# fixtures pesados — D22: fuera del repo, sha256 en manifiesto
+fixtures/heavy/
+
+# cube-v1 lo escribe el generador, no se commitea — D18
+fixtures/contracts/cube-v1/
+
+# workspaces de proyecto
+*/project.json
+reconstruction/packages/
+production/packages/

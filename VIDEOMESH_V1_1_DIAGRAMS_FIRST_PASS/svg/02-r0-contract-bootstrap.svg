@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" role="img" aria-labelledby="vm-d02-title vm-d02-desc">
+      <title id="vm-d02-title">R0 contract bootstrap</title>
+      <desc id="vm-d02-desc">Why can the product pipeline not begin before R0-B passes?</desc>
+      <defs>
+      <marker id="vm-d02-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#A7B0BB"/></marker>
+      <marker id="vm-d02-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#E47A36"/></marker>
+      <marker id="vm-d02-arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#7299C5"/></marker>
+      <marker id="vm-d02-arrow-open" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polyline points="0 0,8 3,0 6" fill="none" stroke="#A7B0BB" stroke-width="1.2"/></marker>
+    </defs>
+      <style>
+.title{font-family:'Instrument Serif',Georgia,serif;font-size:40px;font-weight:400;fill:#F3F5F7;}
+.eyebrow{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:8px;letter-spacing:1.8px;fill:#77828E;}
+.subtitle{font-family:'Geist',Inter,Arial,sans-serif;font-size:12px;fill:#A7B0BB;}
+.node-name{font-family:'Geist',Inter,Arial,sans-serif;font-size:16px;font-weight:600;fill:#F3F5F7;}
+.node-small{font-family:'Geist',Inter,Arial,sans-serif;font-size:12px;font-weight:600;fill:#F3F5F7;}
+.mono{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:12px;fill:#A7B0BB;}
+.mono-small{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:8px;fill:#77828E;letter-spacing:.4px;}
+.tag{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:8px;fill:#77828E;letter-spacing:1.2px;}
+.arrow-label{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:8px;fill:#77828E;letter-spacing:.8px;}
+.callout{font-family:'Instrument Serif',Georgia,serif;font-size:16px;font-style:italic;fill:#A7B0BB;}
+.footer{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:8px;fill:#77828E;letter-spacing:.5px;}
+.entity-field{font-family:'Geist Mono',Menlo,Consolas,monospace;font-size:8px;fill:#A7B0BB;}
+</style>
+      <rect width="1280" height="720" fill="#111418"/>
+      <text x="48" y="44" class="eyebrow">VM-D02 · VIDEOMESH V1.1 · CANONICAL VIEW</text>
+    <text x="48" y="88" class="title">R0 contract bootstrap</text>
+    <text x="48" y="116" class="subtitle">Why can the product pipeline not begin before R0-B passes?</text>
+    <line x1="48" y1="136" x2="1232" y2="136" stroke="#2C343E" stroke-width="1"/>
+      <line x1="640" y1="212" x2="640" y2="224" fill="none" stroke="#A7B0BB" stroke-width="1.4" marker-end="url(#vm-d02-arrow)"/><line x1="640" y1="280" x2="640" y2="292" fill="none" stroke="#A7B0BB" stroke-width="1.4" marker-end="url(#vm-d02-arrow)"/><line x1="640" y1="348" x2="640" y2="360" fill="none" stroke="#A7B0BB" stroke-width="1.4" marker-end="url(#vm-d02-arrow)"/><line x1="640" y1="416" x2="640" y2="428" fill="none" stroke="#A7B0BB" stroke-width="1.4" marker-end="url(#vm-d02-arrow)"/><line x1="640" y1="484" x2="640" y2="504" fill="none" stroke="#7299C5" stroke-width="1.4" marker-end="url(#vm-d02-arrow-link)"/><path d="M 700,532 H 832 Q 840,532 840,540 V 596 Q 840,604 848,604 H 936" fill="none" stroke="#E47A36" stroke-width="1.4" marker-end="url(#vm-d02-arrow-accent)"/><path d="M 580,532 H 448 Q 440,532 440,540 V 596 Q 440,604 432,604 H 320" fill="none" stroke="#A7B0BB" stroke-width="1.4" marker-end="url(#vm-d02-arrow)"/><rect x="764.0" y="504" width="56" height="12" rx="4" fill="#111418"/><text x="792" y="516" class="arrow-label" text-anchor="middle">PASS</text><rect x="460.0" y="504" width="56" height="12" rx="4" fill="#111418"/><text x="488" y="516" class="arrow-label" text-anchor="middle">FAIL</text><rect x="496" y="156" width="288" height="56" rx="8" fill="rgba(228,122,54,0.10)" stroke="#E47A36" stroke-width="1.4"/>
+<rect x="508" y="164" width="64" height="16" rx="4" fill="none" stroke="#E47A36" stroke-opacity="0.55" stroke-width="1"/>
+<text x="540.0" y="176" class="tag" text-anchor="middle">CURRENT</text>
+<text x="640.0" y="180.0" class="node-small" text-anchor="middle">Sprint 0A</text>
+<text x="640.0" y="204.0" class="mono-small" text-anchor="middle">Contract Primitives</text><rect x="496" y="224" width="288" height="56" rx="8" fill="#181D23" stroke="#A7B0BB" stroke-width="1"/>
+<rect x="508" y="232" width="64" height="16" rx="4" fill="none" stroke="#A7B0BB" stroke-opacity="0.55" stroke-width="1"/>
+<text x="540.0" y="244" class="tag" text-anchor="middle">PLANNED</text>
+<text x="640.0" y="248.0" class="node-small" text-anchor="middle">Sprint 0B</text>
+<text x="640.0" y="272.0" class="mono-small" text-anchor="middle">Camera · FrameGraph · Scale</text><rect x="496" y="292" width="288" height="56" rx="8" fill="#181D23" stroke="#A7B0BB" stroke-width="1"/>
+<rect x="508" y="300" width="64" height="16" rx="4" fill="none" stroke="#A7B0BB" stroke-opacity="0.55" stroke-width="1"/>
+<text x="540.0" y="312" class="tag" text-anchor="middle">PLANNED</text>
+<text x="640.0" y="316.0" class="node-small" text-anchor="middle">Sprint 0C</text>
+<text x="640.0" y="340.0" class="mono-small" text-anchor="middle">Package Security · SHA256 · Sealing</text><rect x="496" y="360" width="288" height="56" rx="8" fill="#181D23" stroke="#A7B0BB" stroke-width="1"/>
+<rect x="508" y="368" width="64" height="16" rx="4" fill="none" stroke="#A7B0BB" stroke-opacity="0.55" stroke-width="1"/>
+<text x="540.0" y="380" class="tag" text-anchor="middle">PLANNED</text>
+<text x="640.0" y="384.0" class="node-small" text-anchor="middle">Sprint 0D</text>
+<text x="640.0" y="408.0" class="mono-small" text-anchor="middle">cube-v1 · expected.json · parity</text><rect x="496" y="428" width="288" height="56" rx="8" fill="rgba(114,153,197,0.09)" stroke="#7299C5" stroke-width="1.3"/>
+<rect x="508" y="436" width="40" height="16" rx="4" fill="none" stroke="#7299C5" stroke-opacity="0.55" stroke-width="1"/>
+<text x="528.0" y="448" class="tag" text-anchor="middle">GATE</text>
+<text x="640.0" y="452.0" class="node-small" text-anchor="middle">SoftSight R0-B</text>
+<text x="640.0" y="476.0" class="mono-small" text-anchor="middle">cross-project contract proof</text><polygon points="640,504 700,532 640,560 580,532" fill="#181D23" stroke="#7299C5" stroke-width="1.4"/><text x="640" y="536" class="node-small" text-anchor="middle">R0-B?</text><rect x="936" y="576" width="224" height="56" rx="8" fill="rgba(157,187,155,0.08)" stroke="#9DBB9B" stroke-width="1.2"/>
+<rect x="948" y="584" width="40" height="16" rx="4" fill="none" stroke="#9DBB9B" stroke-opacity="0.55" stroke-width="1"/>
+<text x="968.0" y="596" class="tag" text-anchor="middle">PASS</text>
+<text x="1048.0" y="600.0" class="node-small" text-anchor="middle">Sprint 1 unlocked</text>
+<text x="1048.0" y="624.0" class="mono-small" text-anchor="middle">Product Core Engine</text><rect x="96" y="576" width="224" height="56" rx="8" fill="rgba(196,139,134,0.08)" stroke="#C48B86" stroke-width="1.2"/>
+<rect x="108" y="584" width="40" height="16" rx="4" fill="none" stroke="#C48B86" stroke-opacity="0.55" stroke-width="1"/>
+<text x="128.0" y="596" class="tag" text-anchor="middle">FAIL</text>
+<text x="208.0" y="600.0" class="node-small" text-anchor="middle">STOP / fix contract</text>
+<text x="208.0" y="624.0" class="mono-small" text-anchor="middle">No FFmpeg · OpenCV · COLMAP</text><text x="72" y="180" class="callout">No product pipeline before R0-B PASS.</text>
+      <line x1="48" y1="672" x2="1232" y2="672" stroke="#2C343E" stroke-width="1"/>
+    <text x="48" y="700" class="footer">SOURCE · VIDEOMESH_V1_1_IMPLEMENTATION_ROADMAP.md · contrato-videomesh.md</text>
+    <text x="1232" y="700" class="footer" text-anchor="end">VM-D02 · 2026-08-12</text>
+    </svg>
