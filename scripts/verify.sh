@@ -28,5 +28,6 @@ echo "== publicado al dia =="
 "$PY" scripts/agents_md.py --check
 "$PY" scripts/generar_estado.py --check
 "$PY" scripts/generar_modelos.py --check
+"$PY" scripts/generar_expected.py --check
 
 echo "== verde =="
