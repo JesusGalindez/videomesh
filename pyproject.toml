@@ -32,6 +32,16 @@ src = ["src", "tests"]
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
 
+# Los modelos generados los escribe scripts/generar_modelos.py y los compara byte
+# a byte una prueba: quien manda en su forma es el generador, no el formateador.
+# Se siguen mirando de verdad (F, I, B); solo se les perdona el ancho de linea,
+# que en una union de doce ramas no dice nada.
+[tool.ruff.lint.per-file-ignores]
+"src/videomesh/contracts/modelos/*.py" = ["E501"]
+
+[tool.ruff.format]
+exclude = ["src/videomesh/contracts/modelos/*.py"]
+
 [tool.mypy]
 python_version = "3.12"
 files = ["src", "tests"]
