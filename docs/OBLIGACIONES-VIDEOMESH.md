@@ -5,8 +5,8 @@
 vive en `Dron/softsight/docs/`. Si los dos dicen cosas distintas, manda el contrato.
 
 **Estado del original al revisar esta tabla:** 2026-09-15.
-sha256 `43b305e3b5cea86fcf965f059b6a44fe96fa89a7bc5967782a4a251e0281acbc`
-(1809 líneas, D1–D34 + P1–P12). Si el hash cambia, esta tabla puede haber quedado
+sha256 `9023b47979d07e9d5232f9819fd4ab27bcfc7aa33e3658b28c915506f42e6023`
+(1832 líneas, D1–D34 + P1–P12). Si el hash cambia, esta tabla puede haber quedado
 vieja: se comprueba con `shasum -a 256 docs/contrato-videomesh.md`.
 
 **Ya no hace falta acordarse.** `tests/test_contrato_no_ha_derivado.py` lee este
@@ -79,7 +79,7 @@ pueden leer.
 | Dec | Qué debe existir en VideoMesh | Puerta que la cierra del lado de SoftSight |
 |---|---|---|
 | D1 | escribir paquete en disco, pasar ruta del manifest; nunca base64 ni streaming | `test:package-transport` — **IMPLEMENTADA 2026-09-14** |
-| D2 | parsear el **identificador** `SS-XXX-NNN`, nunca el mensaje | `test:codes`; falta responder a los **32** PROPUESTOS |
+| D2 | parsear el **identificador** `SS-XXX-NNN`, nunca el mensaje | `test:codes` — **IMPLEMENTADA 2026-09-15**, los 32 respondidos y aceptados tal cual |
 | D3 | leer los dos ejes por separado; no colapsar `execution` con `certification` | `test:reconstruction` |
 | D4 | `ColmapAdapter` real | `test:colmap` con `colmap-real-v1` — **IMPLEMENTADA 2026-09-13** |
 | D7 | cada artifact declara `path`, `bytes`, `sha256`; `packageId` en el manifest, nunca del nombre del directorio | `test:reconstruction` (`package-integrity-v1`) |
@@ -111,6 +111,7 @@ sino porque hay una prueba que se pone roja si se incumple.
 
 | Dec | Prueba de VideoMesh |
 |---|---|
+| D2 | `test_d2_codigos.py` — se actúa por el identificador; ningún fichero lee `message` |
 | D6 | `test_c1_c2_integridad.py` — ruta absoluta, `..`, escape por symlink con contenido idéntico, enlace roto |
 | D7 | `test_c1_c2_integridad.py` — `packageId` que sobrevive a renombrar el directorio; `bytes` y `sha256` leídos del fichero |
 | D9 | `test_b4_escala.py` — las tres filas, con el presupuesto absoluto sobre escala relativa rechazado |
@@ -129,8 +130,8 @@ sino porque hay una prueba que se pone roja si se incumple.
 | D33 | `test_b2_camara.py` — `sourceOrientation` vigilado por ausencia; la rejilla del PNG contra la declarada |
 | D34 | `test_d3_paridad.py::test_r0_b` |
 
-Lo que sigue abierto de este lado es **D2**: los 32 identificadores PROPUESTOS
-siguen sin respuesta, y no se fijan desde aquí porque es decisión de criterio.
+De este lado ya no queda nada abierto. D2 era lo último, y se cerró el
+2026-09-15.
 
 ## Deuda de la otra mitad
 
@@ -139,8 +140,11 @@ anteriores ya no eran ciertas** y se tachan con la fecha en que dejaron de serlo
 para que se vea qué desbloqueó a qué.
 
 ```text
-D2    los identificadores PROPUESTOS, sin respuesta          SIGUE ABIERTA
-      eran 5 en el envío 01 y 28 en el 02; hoy son 32
+~~D2    los identificadores PROPUESTOS, sin respuesta~~
+        RESUELTA 2026-09-15: los 32 aceptados tal cual. Renumerar habría roto
+        fixtures vivos de los dos lados a cambio de nada, y tres motivos escritos
+        aquí desde el texto de D11 —sin mirar su tabla— salieron idénticos a los
+        canónicos. Ya no queda ningún PROPUESTO
 ```
 
 **Y dos que se cerraron el mismo 2026-09-15**, las dos escribiendo esta mitad:
@@ -209,10 +213,10 @@ no trata INCONCLUSIVE como PASS                           D3
 ```
 
 **Dónde está el bloqueo hoy, dicho sin rodeos.** En ningún sitio del camino de R0.
-Del lado de SoftSight quedan 30 de 34 IMPLEMENTADAS, y las 4 abiertas esperan a un
-consumidor que responda (D2), a un fichero EXR (D5), a un productor real con malla
-sobre datos de verdad (D26) o a una segunda plataforma (D28). Ninguna bloquea el
-Sprint 1.
+Del lado de SoftSight quedan 31 de 34 IMPLEMENTADAS, y las 3 abiertas esperan a un
+fichero EXR (D5), a un productor real con malla sobre datos de verdad (D26) o a una
+segunda plataforma (D28). Ninguna bloquea el Sprint 1 ni depende de este
+repositorio.
 
 Lo único accionable desde aquí es **D2**: 32 identificadores PROPUESTOS sin
 respuesta. No se fijan desde este repositorio porque es decisión de criterio, no de

@@ -103,6 +103,7 @@ Vuelven a generar lo que este repositorio publica: `scripts/agents_md.py` · `sc
 | `test_d1_cube_v1.py` | D1 — V3: el `cube-v1` de VideoMesh, consumido por SoftSight de verdad. |
 | `test_d1_imagenes.py` | D1, segunda pieza — las imagenes son evidencia, no relleno. |
 | `test_d1_malla_y_ply.py` | D1, primera pieza — la geometria del cubo y su PLY. |
+| `test_d2_codigos.py` | D2 — VideoMesh actúa por el identificador, nunca por el mensaje. |
 | `test_d2_expected.py` | D2 — V4: lo que VideoMesh afirma de su propio cubo. |
 | `test_d3_paridad.py` | D3 y D4 — V10, D23: las tres comparaciones, y R0-B. |
 | `test_estado_publicado.py` | VideoMesh declara la combinacion entera de versiones que habla — D12. |
