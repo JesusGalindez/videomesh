@@ -79,6 +79,9 @@ cross-project parity fixtures
 
 ## Estado del contrato al arrancar VideoMesh
 
+Foto del 2026-08-12, y se queda como foto: es el estado contra el que se diseñó
+este roadmap y borrarlo haría ilegible por qué está escrito como está.
+
 ```text
 D1–D34        ACORDADAS
 PROPUESTAS    0
@@ -86,6 +89,33 @@ PRINCIPIOS    P1–P12
 ```
 
 Una decisión se considera implementada únicamente cuando existe una prueba que falla si se viola.
+
+## Estado del contrato hoy — 2026-09-15
+
+**Trece decisiones se han cerrado desde el arranque, y ninguna por parte de
+VideoMesh**: las cerró SoftSight construyendo su lado. El estado vivo no vive
+aquí; vive en el registro del contrato y en
+[`docs/OBLIGACIONES-VIDEOMESH.md`](docs/OBLIGACIONES-VIDEOMESH.md), que se
+comprueba contra el hash del contrato antes de usarse.
+
+```text
+IMPLEMENTADAS  27
+ACORDADAS       7   D2, D5, D23, D26, D28, D29, D34
+PROPUESTAS      0
+```
+
+Lo que eso significa para este roadmap, y es la línea que conviene leer antes de
+planificar nada: **del lado de SoftSight no queda ninguna decisión accionable.**
+Las siete abiertas esperan a un consumidor que responda, a un fichero EXR, a
+valores dorados, a un productor con malla, o a una segunda plataforma — y tres de
+ellas (D23, D26, D34) cuelgan de un solo hito: que VideoMesh genere su `cube-v1`.
+
+Y una que el roadmap no podía prever porque se descubrió después: **el handoff
+era imposible hasta el 2026-09-14.** El puente solo aceptaba ficheros en base64 y
+un `dense.ply` de 150 MB son ~200 codificados contra un tope de 256; no era
+estrecho, era imposible. Desde `bridgeContractVersion: 2` el paquete viaja por
+ruta. Cualquier sprint que diera por hecho el transporte estaba construyendo sobre
+una suposición que no se sostenía.
 
 ## Regla P12 aplicada al roadmap
 
