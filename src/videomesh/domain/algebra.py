@@ -13,7 +13,7 @@ sale bien colocada por casualidad y ningun hash lo delata.
 
 from collections.abc import Sequence
 
-__all__ = ["IDENTIDAD", "aplicar", "componer", "comprobar_matriz"]
+__all__ = ["IDENTIDAD", "aplicar", "componer", "comprobar_matriz", "es_rigida", "inversa_rigida"]
 
 #: Traslacion nula, sin rotacion ni escala. Se registra igual (D11).
 IDENTIDAD = [
@@ -79,3 +79,40 @@ def componer(
         for fila in range(4)
         for columna in range(4)
     ]
+
+
+def es_rigida(matriz: Sequence[float], tolerancia: float = 1e-9) -> bool:
+    """Dice si la matriz es una rotacion mas una traslacion, sin escala ni proyeccion.
+
+    Importa porque D11 pide que ida y vuelta den la identidad **exacta**, y eso solo
+    lo cumple una transformacion cuya inversa se pueda escribir sin dividir: la de
+    una rigida es la transpuesta de su rotacion. Una escala tiene inversa, pero
+    inexacta, y una proyeccion no es una pose aunque los dieciseis numeros esten.
+    """
+    comprobar_matriz(matriz)
+    if any(abs(a - b) > tolerancia for a, b in zip(matriz[12:], (0.0, 0.0, 0.0, 1.0), strict=True)):
+        return False
+    # R^T R tiene que ser la identidad: columnas ortonormales.
+    for i in range(3):
+        for j in range(3):
+            producto = sum(matriz[k * 4 + i] * matriz[k * 4 + j] for k in range(3))
+            if abs(producto - (1.0 if i == j else 0.0)) > tolerancia:
+                return False
+    return True
+
+
+def inversa_rigida(matriz: Sequence[float]) -> list[float]:
+    """La inversa de una transformacion rigida: `R^T` y `-R^T t`.
+
+    Se escribe asi y no invirtiendo la matriz entera a proposito: no hay ninguna
+    division, asi que la vuelta deshace la ida sin arrastrar el error que una
+    eliminacion gaussiana dejaria.
+    """
+    comprobar_matriz(matriz)
+    traslacion = (matriz[3], matriz[7], matriz[11])
+    inversa = list(IDENTIDAD)
+    for fila in range(3):
+        for columna in range(3):
+            inversa[fila * 4 + columna] = matriz[columna * 4 + fila]
+        inversa[fila * 4 + 3] = -sum(matriz[eje * 4 + fila] * traslacion[eje] for eje in range(3))
+    return inversa

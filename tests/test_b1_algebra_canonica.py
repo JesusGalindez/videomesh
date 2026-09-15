@@ -20,7 +20,7 @@ import pytest
 
 from videomesh.adapters.gltf_transforms import a_gltf, de_gltf
 from videomesh.contracts.generacion import ESQUEMAS
-from videomesh.domain.algebra import aplicar
+from videomesh.domain.algebra import aplicar, inversa_rigida
 
 FIXTURE = json.loads((ESQUEMAS / "fixtures" / "transform-gltf-v1.json").read_text(encoding="utf-8"))
 CASOS = [pytest.param(c, id=c["name"]) for c in FIXTURE["cases"]]
@@ -106,6 +106,18 @@ def test_la_conversion_a_gltf_vive_en_un_solo_sitio() -> None:
     `column * 4 + row` no aparece en `src/` fuera de un fichero. En SoftSight eran
     tres copias, no dos, y la geometria salia bien colocada por casualidad sin que
     ningun hash lo delatara.
+
+    Dos ficheros tienen derecho a escribir esa forma, y conviene decir por que son
+    operaciones distintas aunque se escriban igual:
+
+    - `adapters/gltf_transforms.py` transpone la matriz **entera**, que es la
+      conversion de convencion. Solo ahi.
+    - `domain/algebra.py` transpone la **rotacion 3x3** para invertir una
+      transformacion rigida, y ademas niega la traslacion. No es la misma matriz
+      de salida, y `test_la_inversa_rigida_no_es_la_transpuesta` lo comprueba con
+      numeros en vez de con confianza.
+
+    Un tercer fichero con esta forma es deuda y esta puerta lo dice.
     """
     codigo = pathlib.Path(__file__).resolve().parents[1] / "src" / "videomesh"
     con_gltf = {
@@ -113,4 +125,23 @@ def test_la_conversion_a_gltf_vive_en_un_solo_sitio() -> None:
         for ruta in codigo.rglob("*.py")
         if "columna * 4 + fila" in ruta.read_text(encoding="utf-8")
     }
-    assert con_gltf == {"adapters/gltf_transforms.py"}
+    assert con_gltf == {"adapters/gltf_transforms.py", "domain/algebra.py"}
+
+
+def test_la_inversa_rigida_no_es_la_transpuesta_de_la_matriz() -> None:
+    """Lo que separa las dos transposiciones, dicho con numeros.
+
+    Si fueran la misma operacion, esta prueba pasaria — y entonces el dominio
+    estaria haciendo por dentro la conversion que D32 manda hacer una sola vez en
+    el adaptador.
+    """
+    con_traslacion = [
+        1.0, 0.0, 0.0, 5.0,
+        0.0, 1.0, 0.0, 6.0,
+        0.0, 0.0, 1.0, 7.0,
+        0.0, 0.0, 0.0, 1.0,
+    ]  # fmt: skip
+    assert inversa_rigida(con_traslacion) != a_gltf(con_traslacion)
+    # La inversa deshace; la transpuesta manda la traslacion a la ultima fila.
+    assert inversa_rigida(con_traslacion)[3:12:4] == [-5.0, -6.0, -7.0]
+    assert a_gltf(con_traslacion)[12:15] == [5.0, 6.0, 7.0]
