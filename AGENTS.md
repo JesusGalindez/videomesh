@@ -116,6 +116,7 @@ Vuelven a generar lo que este repositorio publica: `scripts/agents_md.py` · `sc
 | `test_f1_errores_y_proyecto.py` | Core Foundation, primera pieza — errores tipados y modelo de proyecto. |
 | `test_f2_stages.py` | Core Foundation, segunda pieza — stages, determinismo y resume. |
 | `test_f3_cli.py` | Core Foundation, tercera pieza — la CLI. |
+| `test_f4_doctor_consumidor.py` | `doctor` decía DISPONIBLE de un consumidor que no se puede consumir. |
 | `test_puerta_local.py` | La verificación se ejecuta sola, y dice qué falta cuando no puede. |
 <!-- /generado: pruebas -->
 

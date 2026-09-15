@@ -15,6 +15,8 @@ COLMAP y FFmpeg no hacen falta para R0, que es JSON, hashes y álgebra.
 
 import hashlib
 import json
+import pathlib
+import re
 import shutil
 from dataclasses import dataclass
 from typing import Any
@@ -26,7 +28,12 @@ from videomesh.contracts.estado import (
 )
 from videomesh.contracts.generacion import ESQUEMAS
 
-__all__ = ["Comprobacion", "informe_de_doctor"]
+__all__ = ["Comprobacion", "importes_sin_resolver", "informe_de_doctor"]
+
+#: Un `from "..."` de un módulo ES. Solo interesan los **relativos**: `node:fs` y
+#: los paquetes no son ficheros del repositorio, y buscarlos en disco daría un
+#: ausente falso.
+_IMPORTE = re.compile(r"""^\s*(?:import|export)\b[^;]*?from\s+["'](\.[^"']+)["']""", re.M | re.S)
 
 
 @dataclass(frozen=True)
@@ -47,20 +54,53 @@ def _binario(nombre: str, orden: str, *, bloquea: bool) -> Comprobacion:
     return Comprobacion(nombre, "AUSENTE", f"no se encuentra `{orden}` en el PATH", bloquea)
 
 
-def _softsight() -> list[Comprobacion]:
-    filas = []
+def importes_sin_resolver(texto: str, base: pathlib.Path) -> list[str]:
+    """Los importes relativos del módulo que **no están en disco**, en orden.
+
+    Recibe el texto y la base como argumentos a propósito: así el caso rojo se
+    escribe sin mover nada de sitio, que es lo que distingue una comprobación de
+    una que solo se ha visto verde.
+    """
+    return [
+        especificador
+        for especificador in _IMPORTE.findall(texto)
+        if not (base / especificador).is_file()
+    ]
+
+
+def _consumidor() -> Comprobacion:
+    """Que el consumidor **se pueda consumir**, no que el fichero esté.
+
+    `tools/reconstruction.mjs` importa `../dist-node/agent3d.mjs`, que no viaja en
+    el repositorio: lo escribe `npm run build:agent3d`. En un clon recién hecho el
+    fichero está y el import no resuelve, así que mirar `is_file()` decía
+    DISPONIBLE de algo que revienta al primer uso — y `doctor` es lo primero que
+    corre un agente nuevo, así que su respuesta decide si se cree lo que viene
+    después.
+    """
     consumidor = ESQUEMAS.parent / "tools" / "reconstruction.mjs"
-    if consumidor.is_file():
-        filas.append(Comprobacion("SoftSight, consumidor", "DISPONIBLE", str(consumidor), True))
-    else:
-        filas.append(
-            Comprobacion(
-                "SoftSight, consumidor",
-                "AUSENTE",
-                "sin el no hay puerta: un paquete que nadie consume no esta comprobado",
-                True,
-            )
+    if not consumidor.is_file():
+        return Comprobacion(
+            "SoftSight, consumidor",
+            "AUSENTE",
+            "sin el no hay puerta: un paquete que nadie consume no esta comprobado",
+            True,
         )
+
+    faltan = importes_sin_resolver(consumidor.read_text(encoding="utf-8"), consumidor.parent)
+    if faltan:
+        return Comprobacion(
+            "SoftSight, consumidor",
+            "SIN CONSTRUIR",
+            f"el fichero esta pero no resuelve {', '.join(faltan)}; "
+            "se construye con `npm run build:agent3d` en ../Dron/softsight",
+            True,
+        )
+    return Comprobacion("SoftSight, consumidor", "DISPONIBLE", str(consumidor), True)
+
+
+def _softsight() -> list[Comprobacion]:
+    filas = [_consumidor()]
 
     registro = ESQUEMAS / "registry.json"
     if not registro.is_file():
@@ -104,7 +144,7 @@ def informe_de_doctor() -> dict[str, Any]:
     bloqueado = [
         c
         for c in comprobaciones
-        if c.bloquea and c.estado in ("AUSENTE", "NO COINCIDE", "INCOMPATIBLE")
+        if c.bloquea and c.estado in ("AUSENTE", "SIN CONSTRUIR", "NO COINCIDE", "INCOMPATIBLE")
     ]
     return {
         "documentType": "videomesh.doctor",
