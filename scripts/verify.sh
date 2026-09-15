@@ -5,6 +5,18 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+# El vecino no es opcional: doce de los diecinueve ficheros de prueba leen sus
+# esquemas, sus fixtures y su consumidor, y `docs/contrato-videomesh.md` es un
+# enlace al suyo. Sin el, esto reventaria doce veces sin decir que lo que falta es
+# un repositorio.
+VECINO=../Dron/softsight
+if [[ ! -d "$VECINO/contracts" ]]; then
+  echo "falta el repositorio vecino en $VECINO" >&2
+  echo "VideoMesh se escribe contra SoftSight: sus esquemas son la frontera y su" >&2
+  echo "consumidor es la puerta. Clonalo al lado de este repositorio." >&2
+  exit 1
+fi
+
 PY=.venv/bin/python
 if [[ ! -x "$PY" ]]; then
   echo "falta .venv — crealo con: uv venv --python ~/.local/bin/python3.12 .venv" >&2

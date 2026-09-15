@@ -8,8 +8,19 @@ proposito —el techo son 120 lineas y una prueba lo comprueba— y lo demas son
 ## Lo primero
 
 ```bash
+bash scripts/instalar_hooks.sh   # una vez por clon
 bash scripts/verify.sh
 ```
+
+El hook de `pre-commit` corre la verificacion entera y para el commit si esta en
+rojo. Vive en `scripts/hooks/` y no en `.git/hooks`, que no se versiona; una
+prueba comprueba que la copia instalada sigue siendo la del repositorio. Para
+saltarselo a proposito: `git commit --no-verify`.
+
+**No hay CI remoto, y es deliberado:** este repositorio no tiene remoto, asi que un
+workflow seria un fichero que parece una puerta y no se ejecuta nunca. Cuando lo
+haya, el workflow tiene que clonar SoftSight: doce de los diecinueve ficheros de
+prueba leen sus esquemas, sus fixtures y su consumidor.
 
 Si esto esta en rojo, no sigas. Y antes de fiarte de la tabla de obligaciones:
 
@@ -68,7 +79,7 @@ primero disfrazado. Leerlo si — `tools/cubeV1.mjs` hace lo mismo del otro lado
 <!-- generado: comandos -->
 `bash scripts/verify.sh` — **lo primero y lo ultimo**: linter, tipos, pruebas y que lo publicado este al dia.
 
-Vuelven a generar lo que este repositorio publica: `scripts/agents_md.py` · `scripts/generar_cube_v1.py` · `scripts/generar_estado.py` · `scripts/generar_expected.py` · `scripts/generar_modelos.py`. Con `--check` dicen si lo commiteado se ha quedado atras.
+Vuelven a generar lo que este repositorio publica: `scripts/agents_md.py` · `scripts/generar_cube_v1.py` · `scripts/generar_estado.py` · `scripts/generar_expected.py` · `scripts/generar_modelos.py` · `scripts/instalar_hooks.sh`. Con `--check` dicen si lo commiteado se ha quedado atras.
 <!-- /generado: comandos -->
 
 ## Las pruebas, y que cubre cada una
@@ -95,6 +106,7 @@ Vuelven a generar lo que este repositorio publica: `scripts/agents_md.py` · `sc
 | `test_d2_expected.py` | D2 — V4: lo que VideoMesh afirma de su propio cubo. |
 | `test_d3_paridad.py` | D3 y D4 — V10, D23: las tres comparaciones, y R0-B. |
 | `test_estado_publicado.py` | VideoMesh declara la combinacion entera de versiones que habla — D12. |
+| `test_puerta_local.py` | La verificación se ejecuta sola, y dice qué falta cuando no puede. |
 <!-- /generado: pruebas -->
 
 ## Entorno

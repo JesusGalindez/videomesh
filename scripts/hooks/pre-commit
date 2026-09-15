@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Puerta local: ningun commit entra sin la verificacion entera en verde.
+#
+# Vive en el repositorio y no en `.git/hooks`, que no se versiona: ahi solo hay
+# una copia de la maquina de alguien. Se instala con `scripts/instalar_hooks.sh`,
+# y una prueba comprueba que la copia instalada sigue siendo esta.
+#
+# Corre la verificacion ENTERA y no un subconjunto rapido. Una puerta que mira
+# menos que la que se pasa a mano deja pasar justo lo que no se mira.
+#
+# Para saltarsela en un caso concreto: `git commit --no-verify`, que es explicito
+# y queda en el historial de quien lo escribio.
+set -euo pipefail
+
+raiz="$(git rev-parse --show-toplevel)"
+cd "$raiz"
+
+if ! bash scripts/verify.sh; then
+  echo >&2
+  echo "verify.sh en rojo: el commit se para aqui." >&2
+  echo "Arreglalo, o usa 'git commit --no-verify' si sabes por que." >&2
+  exit 1
+fi
