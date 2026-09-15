@@ -80,7 +80,16 @@ class _Generador:
             ramas = [
                 self.tipo(rama, [*camino, f"Opcion{i}"]) for i, rama in enumerate(esquema["anyOf"])
             ]
-            return " | ".join(ramas)
+            union = " | ".join(ramas)
+            discriminante = _discriminante(esquema["anyOf"])
+            if discriminante:
+                # D21. Sin discriminar, un artifact de malla al que le falta
+                # `purelyReconstructed` da cuatro errores de forma y ninguno dice
+                # que falta: hay que mirar el literal del tipo primero y comprobar
+                # solo esa alternativa. Del otro lado esta nota «resulto ser el
+                # trabajo», asi que aqui se hace desde el primer commit.
+                return f'Annotated[{union}, Field(discriminator="{discriminante}")]'
+            return union
 
         clase = esquema.get("type")
         if clase == "string":
@@ -156,6 +165,30 @@ class _Generador:
             return f"{atributo}: {tipo} = Field({alias})" if alias else f"{atributo}: {tipo}"
         partes = [p for p in (alias, "default=None") if p]
         return f"{atributo}: {tipo} | None = Field({', '.join(partes)})"
+
+
+def _discriminante(ramas: list[dict[str, Any]]) -> str | None:
+    """El campo que separa las ramas, si lo hay: un literal distinto en cada una.
+
+    Declarado, no adivinado. Solo cuenta como discriminante el campo que en TODAS
+    las ramas es obligatorio, tiene un unico valor de enumeracion, y ese valor no
+    se repite entre ramas. Con eso, `type` discrimina los cuatro artifacts y nada
+    mas lo hace por accidente.
+    """
+    if len(ramas) < 2 or not all(r.get("type") == "object" and "properties" in r for r in ramas):
+        return None
+    for campo in ramas[0]["properties"]:
+        valores: list[Any] = []
+        for rama in ramas:
+            sub = rama["properties"].get(campo, {})
+            enumeracion = sub.get("enum")
+            if campo not in rama.get("required", []) or not enumeracion or len(enumeracion) != 1:
+                valores = []
+                break
+            valores.append(enumeracion[0])
+        if valores and len(set(valores)) == len(ramas):
+            return str(campo)
+    return None
 
 
 def _importes(clases: list[str]) -> str:

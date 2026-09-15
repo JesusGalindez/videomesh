@@ -155,7 +155,7 @@ class ReconstructionPackage(BaseModel):
     packageId: str
     state: Literal["WRITING", "SEALED"]
     producer: ReconstructionPackageProducer
-    artifacts: list[ReconstructionPackageArtifactsItemOpcion0 | ReconstructionPackageArtifactsItemOpcion1 | ReconstructionPackageArtifactsItemOpcion2 | ReconstructionPackageArtifactsItemOpcion3]
+    artifacts: list[Annotated[ReconstructionPackageArtifactsItemOpcion0 | ReconstructionPackageArtifactsItemOpcion1 | ReconstructionPackageArtifactsItemOpcion2 | ReconstructionPackageArtifactsItemOpcion3, Field(discriminator="type")]]
     cameras: list[ReconstructionPackageCamerasItem] | None = Field(default=None)
     scale: ReconstructionPackageScale
     frameGraph: ReconstructionPackageFrameGraph
