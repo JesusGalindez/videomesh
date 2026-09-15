@@ -1,0 +1,1 @@
+{"$comment":"Generado por scripts/generar_estado.py del registro de SoftSight. No se edita a mano: es lo que VideoMesh declara hablar, en bloque (D12).","combinacion":{"animationAudit":1,"bridge":2,"reconstructionPackage":"0.1","reconstructionReport":"0.2","report":3,"stagingAudit":1,"storyAudit":1},"documentType":"videomesh.contract-state"}

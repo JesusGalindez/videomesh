@@ -17,6 +17,7 @@ import hashlib
 import json
 from typing import Any
 
+from videomesh.contracts.estado import version_del_paquete
 from videomesh.contracts.generacion import ESQUEMAS
 from videomesh.contracts.serialization import volcar_json
 
@@ -50,10 +51,11 @@ def sobre_de(tipo_de_documento: str) -> dict[str, str]:
     """Devuelve el sobre de hoy para ese tipo de documento, leido del esquema."""
     if tipo_de_documento not in ESQUEMA_DE:
         raise ErrorDeSobre(f"documentType desconocido: {tipo_de_documento!r}")
-    registro = _registro()
     return {
         "documentType": tipo_de_documento,
-        "contractVersion": registro["contractVersions"][-1],
+        # Del bloque publicado, no del registro de esquemas: es la misma cifra en
+        # dos sitios y D12 dice cual manda.
+        "contractVersion": version_del_paquete(),
         "contractSchemaSha256": _hash_del_esquema(ESQUEMA_DE[tipo_de_documento]),
     }
 
