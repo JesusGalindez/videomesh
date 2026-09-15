@@ -28,6 +28,9 @@ addopts = "-q"
 [tool.ruff]
 line-length = 100
 src = ["src", "tests"]
+# `docs/` es prosa. Ruff 0.16 formatea los bloques de codigo de los markdown y
+# reescribiria ejemplos que estan escritos para leerse, no para ejecutarse.
+extend-exclude = ["docs"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
