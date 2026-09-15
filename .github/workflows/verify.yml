@@ -49,11 +49,17 @@ jobs:
       # `tools/reconstruction.mjs` importa `../dist-node/agent3d.mjs`, que no
       # esta versionado. Sin este paso el consumidor existe como fichero y
       # revienta al ejecutarse, que es la peor de las dos formas de fallar.
+      # Y `artifacts/cube-v1/` tampoco viaja: su `.gitignore` lo excluye porque
+      # el generador es determinista y commitearlo seria un segundo original.
+      # Cinco ficheros de prueba de VideoMesh leen su manifest para saber que
+      # forma tiene un paquete de verdad, asi que sin este paso la suite no
+      # llega ni a arrancar. Lo caza la primera ejecucion de este workflow.
       - name: construir el consumidor de SoftSight
         working-directory: Dron/softsight
         run: |
           npm ci
           npm run build:agent3d
+          npm run cube-v1
 
       - uses: astral-sh/setup-uv@v6
         with:
