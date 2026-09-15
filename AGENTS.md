@@ -68,7 +68,7 @@ primero disfrazado. Leerlo si — `tools/cubeV1.mjs` hace lo mismo del otro lado
 <!-- generado: comandos -->
 `bash scripts/verify.sh` — **lo primero y lo ultimo**: linter, tipos, pruebas y que lo publicado este al dia.
 
-Vuelven a generar lo que este repositorio publica: `scripts/agents_md.py` · `scripts/generar_estado.py` · `scripts/generar_modelos.py`. Con `--check` dicen si lo commiteado se ha quedado atras.
+Vuelven a generar lo que este repositorio publica: `scripts/agents_md.py` · `scripts/generar_cube_v1.py` · `scripts/generar_estado.py` · `scripts/generar_modelos.py`. Con `--check` dicen si lo commiteado se ha quedado atras.
 <!-- /generado: comandos -->
 
 ## Las pruebas, y que cubre cada una
@@ -89,6 +89,9 @@ Vuelven a generar lo que este repositorio publica: `scripts/agents_md.py` · `sc
 | `test_c1_c2_integridad.py` | C1 y C2 — V6, V8 y D7: identidad del paquete e integridad de cada artifact. |
 | `test_c3_sellado.py` | C3 — V5, V7 y D29: el paquete se publica entero o no se publica. |
 | `test_contrato_no_ha_derivado.py` | La tabla de obligaciones declara contra que contrato se escribio. Aqui se comprueba. |
+| `test_d1_cube_v1.py` | D1 — V3: el `cube-v1` de VideoMesh, consumido por SoftSight de verdad. |
+| `test_d1_imagenes.py` | D1, segunda pieza — las imagenes son evidencia, no relleno. |
+| `test_d1_malla_y_ply.py` | D1, primera pieza — la geometria del cubo y su PLY. |
 | `test_estado_publicado.py` | VideoMesh declara la combinacion entera de versiones que habla — D12. |
 <!-- /generado: pruebas -->
 
