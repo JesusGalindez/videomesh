@@ -22,4 +22,11 @@ echo "== mypy =="
 echo "== pytest =="
 "$PY" -m pytest
 
+# Sin esto, AGENTS.md seria otro documento que depende de que alguien se acuerde,
+# que es exactamente el fallo que existe para cerrar.
+echo "== publicado al dia =="
+"$PY" scripts/agents_md.py --check
+"$PY" scripts/generar_estado.py --check
+"$PY" scripts/generar_modelos.py --check
+
 echo "== verde =="
