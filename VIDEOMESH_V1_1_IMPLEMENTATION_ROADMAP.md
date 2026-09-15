@@ -775,6 +775,15 @@ videomesh/
 
 Los nombres exactos pueden variar si el agente encuentra una distribución más limpia, pero las responsabilidades contractuales no pueden desaparecer ni moverse al dominio de providers externos.
 
+> **Nota del 2026-09-15, que no toca el árbol.** Tres de los fixtures de
+> `fixtures/contracts/` nunca llegaron a existir con ese nombre, y conviene
+> saberlo antes de buscarlos: `hash-mismatch-v1` se construyó como
+> `package-integrity-v1`, y los casos de `camera-transform-v1` e
+> `image-orientation-v1` acabaron dentro de `camera-projection-v1`. El árbol es
+> la foto del 2026-08-12 y se queda como está; quien quiera el destino de cada
+> nombre previsto lo tiene en la línea `**Prueba:**` de la decisión
+> correspondiente del contrato, que desde `49b7e4e` lo dice y lo verifica.
+
 ---
 
 # 8. Modelo de proyecto
@@ -4024,6 +4033,12 @@ unknown-capability-v1
 unsealed-package-v1
 transform-gltf-v1
 ```
+
+Tres nunca existieron con ese nombre —`hash-mismatch-v1` es `package-integrity-v1`,
+y `camera-transform-v1` e `image-orientation-v1` acabaron dentro de
+`camera-projection-v1`—. La lista se deja como estaba, que es la foto del
+2026-08-12; el destino de cada nombre lo dice el contrato en la decisión que lo
+previó. Ver la nota al pie del árbol de §7.
 
 ## Cross-project parity
 

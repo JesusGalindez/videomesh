@@ -19,7 +19,10 @@ fi
 
 PY=.venv/bin/python
 if [[ ! -x "$PY" ]]; then
-  echo "falta .venv — crealo con: uv venv --python ~/.local/bin/python3.12 .venv" >&2
+  # La version sale del pyproject.toml, como en el workflow de CI: escribirla
+  # aqui seria el tercer original, y la ruta que habia era la de una maquina.
+  PY_VERSION="$(sed -n 's/^python_version *= *"\([^"]*\)"/\1/p' pyproject.toml)"
+  echo "falta .venv — crealo con: uv venv --python $PY_VERSION .venv" >&2
   echo "y luego:                  uv pip install --python .venv/bin/python -e '.[dev]'" >&2
   exit 1
 fi
