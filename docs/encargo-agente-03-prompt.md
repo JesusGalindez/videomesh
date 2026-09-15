@@ -24,7 +24,7 @@ ARRANQUE, y este es distinto de los anteriores:
 
        tests/test_contrato_no_ha_derivado.py — declarado 9023b479... / real 02ce8a7e...
 
-     El contrato cambió ayer en SoftSight (commit 49b7e4e) y nadie tocó este
+     El contrato cambió hoy en SoftSight (commit 49b7e4e) y nadie tocó este
      repositorio. La puerta que escribiste en el encargo 02 lo cazó sola. Si sale
      rojo por CUALQUIER OTRA cosa, para y dime la línea exacta.
 
