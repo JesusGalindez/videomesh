@@ -85,6 +85,7 @@ Vuelven a generar lo que este repositorio publica: `scripts/agents_md.py` · `sc
 | `test_b1_algebra_canonica.py` | B1 — V9 y D32: 4x4 por filas, traslacion en 3, 7 y 11, vectores columna. |
 | `test_b2_camara.py` | B2 — D10, D19 y D33: la camara dice de que imagen habla, y se comprueba. |
 | `test_b3_frame_graph.py` | B3 — D11: cada transformacion entre marcos queda registrada, y se comprueba. |
+| `test_b4_escala.py` | B4 — D9: un presupuesto en unidades absolutas sobre una escala que no lo es se rechaza. |
 | `test_contrato_no_ha_derivado.py` | La tabla de obligaciones declara contra que contrato se escribio. Aqui se comprueba. |
 | `test_estado_publicado.py` | VideoMesh declara la combinacion entera de versiones que habla — D12. |
 <!-- /generado: pruebas -->
