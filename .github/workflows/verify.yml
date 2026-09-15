@@ -1,0 +1,80 @@
+# La verificacion, ejecutada por una maquina.
+#
+# `scripts/verify.sh` es el unico comando del repositorio, y hasta aqui corria
+# cuando alguien se acordaba. Eso es una promesa; esto es una comprobacion.
+#
+# Lo que este fichero tiene de particular: VideoMesh **no se puede verificar
+# solo**. Doce de sus ficheros de prueba llaman al consumidor real de SoftSight
+# —`tools/reconstruction.mjs`— y comparan contra sus esquemas y sus fixtures. Un
+# workflow que clonara unicamente este repositorio probaria la mitad que no
+# importa: la que este repositorio cree de si mismo.
+#
+# De ahi la forma del checkout. `scripts/verify.sh` busca al vecino en
+# `../Dron/softsight`, asi que el workspace reproduce esa vecindad en vez de
+# parchear la ruta: el mismo comando, la misma resolucion, aqui y en el portatil.
+#
+# Ninguna version se escribe aqui. La de Node sale del `.nvmrc` de SoftSight
+# —hay que comparar hashes con su aritmetica, no con otra— y la de Python del
+# `python_version` que ya declara `pyproject.toml` para mypy. Un numero a mano en
+# este fichero seria un segundo original del dato.
+
+name: verify
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  verify:
+    name: verificacion
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          path: videomesh
+
+      # El vecino, en el sitio donde `verify.sh` lo busca desde `videomesh/`.
+      - uses: actions/checkout@v5
+        with:
+          repository: JesusGalindez/softsight
+          path: Dron/softsight
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: Dron/softsight/.nvmrc
+          cache: npm
+          cache-dependency-path: Dron/softsight/package-lock.json
+
+      # `tools/reconstruction.mjs` importa `../dist-node/agent3d.mjs`, que no
+      # esta versionado. Sin este paso el consumidor existe como fichero y
+      # revienta al ejecutarse, que es la peor de las dos formas de fallar.
+      - name: construir el consumidor de SoftSight
+        working-directory: Dron/softsight
+        run: |
+          npm ci
+          npm run build:agent3d
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: entorno de VideoMesh
+        working-directory: videomesh
+        run: |
+          PY_VERSION="$(sed -n 's/^python_version *= *"\([^"]*\)"/\1/p' pyproject.toml)"
+          test -n "$PY_VERSION" || { echo "pyproject.toml ya no declara python_version" >&2; exit 1; }
+          uv venv --python "$PY_VERSION" .venv
+          uv pip install --python .venv/bin/python -e '.[dev]'
+
+      # El diagnostico antes que la suite. Si falta el vecino, si su hash de
+      # esquema no coincide o si la combinacion de versiones es incompatible,
+      # esto lo dice por su nombre en una linea; la suite lo diria como un
+      # `assert 1 == 0` a treinta ficheros de distancia.
+      - name: doctor
+        working-directory: videomesh
+        run: .venv/bin/videomesh doctor
+
+      - name: verify.sh
+        working-directory: videomesh
+        run: ./scripts/verify.sh
