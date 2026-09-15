@@ -5,8 +5,8 @@
 vive en `Dron/softsight/docs/`. Si los dos dicen cosas distintas, manda el contrato.
 
 **Estado del original al revisar esta tabla:** 2026-09-15.
-sha256 `9023b47979d07e9d5232f9819fd4ab27bcfc7aa33e3658b28c915506f42e6023`
-(1832 líneas, D1–D34 + P1–P12). Si el hash cambia, esta tabla puede haber quedado
+sha256 `02ce8a7e38822156e6018eca6e9e225b3322ce31928e3b6144e32f319da2a01c`
+(1838 líneas, D1–D34 + P1–P12). Si el hash cambia, esta tabla puede haber quedado
 vieja: se comprueba con `shasum -a 256 docs/contrato-videomesh.md`.
 
 **Ya no hace falta acordarse.** `tests/test_contrato_no_ha_derivado.py` lee este
@@ -65,16 +65,11 @@ V3, V4, V10    Sprint 0D
 
 ## Decisiones que obligan a código de VideoMesh
 
-**La columna de la derecha nombra la puerta que se ejecuta**, no un fichero. La
-versión anterior citaba fixtures por nombre y cuatro de ellos no existen con ese
-nombre: `hash-mismatch-v1` se construyó como `package-integrity-v1`, y
-`unknown-scale-v1`, `depth-optical-axis-v1`, `depth-ray-length-v1` e
-`image-orientation-v1` acabaron dentro de una puerta en vez de como fichero
-suelto. Quien buscara el fichero no encontraba nada y concluiría que la decisión
-está sin cerrar, cuando sí lo está.
-
-Los fixtures que **sí** existen como fichero van entre paréntesis, porque ésos se
-pueden leer.
+**La columna de la derecha nombra la puerta que se ejecuta**, no un fichero, y los
+fixtures que **sí** existen como fichero van entre paréntesis porque ésos se
+pueden leer. Qué nombre previsto acabó dentro de qué fixture lo dice ahora el
+contrato en la línea `**Prueba:**` de cada decisión, desde `49b7e4e`: repetirlo
+aquí sería la segunda fuente del mismo dato.
 
 | Dec | Qué debe existir en VideoMesh | Puerta que la cierra del lado de SoftSight |
 |---|---|---|
@@ -91,7 +86,7 @@ pueden leer.
 | D16 | emitir `contractSchemaSha256`; opcional mientras DRAFT | `test:contracts` |
 | D17 | rechazar no finitos **en origen**, no confiar en Node | `test_json_rejects_non_finite_numbers`, **de VideoMesh** |
 | D19 | distorsión con nombre; el adaptador convierte el vector de COLMAP | `test:reconstruction` (`reconstruction-package-v1`, `colmap-small-v1`) |
-| D20 | `depthKind` explícito, sin inferirlo por proveedor | `test:reconstruction` — el error medido es **0 % en el centro y 12,5 % en la esquina** |
+| D20 | `depthKind` explícito, sin inferirlo por proveedor | `test:reconstruction` (`reconstruction-package-v1`) — el error medido es **0 % en el centro y 12,5 % en la esquina** |
 | D21 | `purelyReconstructed` **requerida** en cada `TRIANGLE_MESH`, **prohibida** en `POINT_CLOUD` | `test:reconstruction` (`reconstruction-package-v1`) |
 | D22 | fixtures < 1 MB en git; los pesados fuera con sha256 en manifiesto versionado | `test:fixtures` — **IMPLEMENTADA 2026-09-14** |
 | D23 | la columna de VideoMesh y la de `SoftSight ↔ VideoMesh` | `test:parity` (`package-parity-v1`, `camera-projection-v1`) — **IMPLEMENTADA 2026-09-15**, las dos columnas existen |
