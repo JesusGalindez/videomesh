@@ -5,16 +5,22 @@
 vive en `Dron/softsight/docs/`. Si los dos dicen cosas distintas, manda el contrato.
 
 **Estado del original al revisar esta tabla:** 2026-09-15.
-sha256 `b9e0e708e46723c5727b3a21a1b2bd95fa7a43167439e189ee44a04adc71613f`
-(1761 líneas, D1–D34 + P1–P12). Si el hash cambia, esta tabla puede haber quedado
+sha256 `43b305e3b5cea86fcf965f059b6a44fe96fa89a7bc5967782a4a251e0281acbc`
+(1809 líneas, D1–D34 + P1–P12). Si el hash cambia, esta tabla puede haber quedado
 vieja: se comprueba con `shasum -a 256 docs/contrato-videomesh.md`.
 
-**Y quedó vieja.** La versión anterior de esta línea declaraba el contrato del
-2026-08-12 —`6dc06081…`, 1138 líneas— y el mecanismo para detectarlo estaba aquí
-escrito desde el primer día. **Nadie lo ejecutó en un mes**, mientras el contrato
-crecía 623 líneas y trece decisiones pasaban a IMPLEMENTADAS. Que el aviso exista
-no sirve de nada si nadie lo corre; conviene comprobarlo antes de usar la tabla,
-no después de haber escrito código contra ella.
+**Ya no hace falta acordarse.** `tests/test_contrato_no_ha_derivado.py` lee este
+hash, calcula el del contrato y compara, y `scripts/verify.sh` lo ejecuta. La
+versión anterior de esta línea declaraba el contrato del 2026-08-12 —`6dc06081…`,
+1138 líneas— y el mecanismo para detectarlo estaba aquí escrito desde el primer
+día: **nadie lo ejecutó en un mes**, mientras el contrato crecía 623 líneas y trece
+decisiones pasaban a IMPLEMENTADAS. Que el aviso exista no sirve de nada si nadie
+lo corre.
+
+La puerta se estrenó el mismo día que se escribió: al cerrar D23, D29 y D34 en el
+contrato, la verificación de este repositorio se puso roja sola —«declarado
+b9e0e708… / real 43b305e3…»— sin que nadie tocara VideoMesh. Eso es lo que esta
+línea tenía que haber hecho en agosto.
 
 Aquí solo está **qué le toca escribir a VideoMesh y qué prueba lo cierra**. La
 semántica de cada decisión no se copia; se lee en el contrato.
@@ -32,17 +38,20 @@ una prueba que **falla si la decisión se incumple** (§1.2 del contrato).
 
 Orden fijado por el contrato, no por conveniencia.
 
+**Las diez están hechas el 2026-09-15**, cada una con la prueba que se pone roja
+si se incumple. La columna de la derecha es el fichero que la cierra.
+
 ```text
-V1   allow_nan=False en toda serialización JSON
-V2   prueba de serialización no finita   test_json_rejects_non_finite_numbers
-V3   generador de cube-v1
-V4   expected.json
-V5   escritor con temporal y final en el mismo volumen
-V6   packageId
-V7   manifest SEALED
-V8   sha256 por artifact
-V9   CameraSet canónico
-V10  arnés de paridad
+V1   allow_nan=False en toda serialización JSON   test_a1_serializacion_estricta.py
+V2   prueba de serialización no finita            test_json_rejects_non_finite_numbers
+V3   generador de cube-v1                         test_d1_cube_v1.py
+V4   expected.json                                test_d2_expected.py
+V5   escritor con temporal y final en el mismo volumen   test_c3_sellado.py
+V6   packageId                                    test_c1_c2_integridad.py
+V7   manifest SEALED                              test_c3_sellado.py
+V8   sha256 por artifact                          test_c1_c2_integridad.py
+V9   CameraSet canónico                           test_b1_algebra_canonica.py
+V10  arnés de paridad                             test_d3_paridad.py
 ```
 
 Mapeo a los sprints del roadmap V1.1 §84:
@@ -85,14 +94,43 @@ pueden leer.
 | D20 | `depthKind` explícito, sin inferirlo por proveedor | `test:reconstruction` — el error medido es **0 % en el centro y 12,5 % en la esquina** |
 | D21 | `purelyReconstructed` **requerida** en cada `TRIANGLE_MESH`, **prohibida** en `POINT_CLOUD` | `test:reconstruction` (`reconstruction-package-v1`) |
 | D22 | fixtures < 1 MB en git; los pesados fuera con sha256 en manifiesto versionado | `test:fixtures` — **IMPLEMENTADA 2026-09-14** |
-| D23 | la columna de VideoMesh y la de `SoftSight ↔ VideoMesh` | `test:parity` (`package-parity-v1`, `camera-projection-v1`); **falta la columna de VideoMesh** |
+| D23 | la columna de VideoMesh y la de `SoftSight ↔ VideoMesh` | `test:parity` (`package-parity-v1`, `camera-projection-v1`) — **IMPLEMENTADA 2026-09-15**, las dos columnas existen |
 | D28 | `MeasurementClass` y `ReproducibilityMode` en métricas, nunca en avisos; bloques por índice de entrada, no por número de workers | `test:measurement` — media; la otra media pide **dos plataformas** |
-| D29 | rename atómico, mismo volumen verificado **antes**, destino que no existe, manifest el último | `test:contracts` (`unsealed-package-v1`) cierra el lado consumidor; **el escritor es de VideoMesh** |
+| D29 | rename atómico, mismo volumen verificado **antes**, destino que no existe, manifest el último | `test:contracts` (`unsealed-package-v1`) cierra el lado consumidor — **IMPLEMENTADA 2026-09-15**, el escritor está |
 | D30 | `additionalProperties: false` en el núcleo; `extensions` **ya existe** en el esquema del paquete | `test:contracts` (`unknown-field-v1`) — **IMPLEMENTADA 2026-09-13** |
 | D31 | el paquete declara `requires` y `provides` | `test:contracts` — **IMPLEMENTADA 2026-09-13** |
 | D32 | álgebra canónica por filas, traslación en 3/7/11, solo `worldFromCamera`; conversión a glTF **exactamente una vez** en el adaptador | `test:gltf-frame` (`transform-gltf-v1`) — **IMPLEMENTADA 2026-09-14** |
 | D33 | orientación horneada en los píxeles antes de exponer frames | `test:reconstruction` — **IMPLEMENTADA 2026-09-13** |
-| D34 | R0-B antes de cualquier fase que dependa de la frontera | `test:r0` cierra **R0-A**; R0-B sigue abierto |
+| D34 | R0-B antes de cualquier fase que dependa de la frontera | `test:r0` cierra **R0-A** — **IMPLEMENTADA 2026-09-15**, R0-B pasa y se levanta la condición de parada |
+
+## Lo que VideoMesh ya cierra, y con qué prueba
+
+La tabla de arriba dice qué exige el consumidor. Ésta dice qué lo sujeta **de este
+lado**, que es lo que faltaba: una decisión no está cerrada porque el código exista,
+sino porque hay una prueba que se pone roja si se incumple.
+
+| Dec | Prueba de VideoMesh |
+|---|---|
+| D6 | `test_c1_c2_integridad.py` — ruta absoluta, `..`, escape por symlink con contenido idéntico, enlace roto |
+| D7 | `test_c1_c2_integridad.py` — `packageId` que sobrevive a renombrar el directorio; `bytes` y `sha256` leídos del fichero |
+| D9 | `test_b4_escala.py` — las tres filas, con el presupuesto absoluto sobre escala relativa rechazado |
+| D10 | `test_b2_camara.py` — el hash reapuntado a otra imagen del mismo paquete se rechaza |
+| D11 | `test_b3_frame_graph.py` — ida y vuelta por dos saltos, arista no rígida, marco sin camino |
+| D12 | `test_estado_publicado.py` — la combinación entera, no un campo suelto |
+| D15 | `test_a2_modelos_generados.py` — se regenera y se compara byte a byte con lo commiteado |
+| D16 | `test_a3_sobre.py` — sin sobre no se serializa; hash fuera del registro rechazado |
+| D17 | `test_a1_serializacion_estricta.py` — `test_json_rejects_non_finite_numbers` |
+| D19 | `test_a2_modelos_generados.py` — distorsión con nombre, del esquema |
+| D21 | `test_a4_artifact_discriminado.py` — los cuatro casos, más el tipo inexistente |
+| D23 | `test_d3_paridad.py` — las tres comparaciones, con las dos mutaciones comprobadas |
+| D29 | `test_c3_sellado.py` — volumen comprobado antes, destino que no se pisa, manifest el último |
+| D30 | `test_a2_modelos_generados.py` — campo desconocido en el núcleo rechazado |
+| D32 | `test_b1_algebra_canonica.py` — los cinco casos del punto conocido y la puerta de un solo sitio |
+| D33 | `test_b2_camara.py` — `sourceOrientation` vigilado por ausencia; la rejilla del PNG contra la declarada |
+| D34 | `test_d3_paridad.py::test_r0_b` |
+
+Lo que sigue abierto de este lado es **D2**: los 32 identificadores PROPUESTOS
+siguen sin respuesta, y no se fijan desde aquí porque es decisión de criterio.
 
 ## Deuda de la otra mitad
 
@@ -103,8 +141,21 @@ para que se vea qué desbloqueó a qué.
 ```text
 D2    los identificadores PROPUESTOS, sin respuesta          SIGUE ABIERTA
       eran 5 en el envío 01 y 28 en el 02; hoy son 32
-D23   la columna de VideoMesh, que pide su cube-v1           SIGUE ABIERTA
-D29   el escritor atómico — esa mitad es de VideoMesh        SIGUE ABIERTA
+```
+
+**Y dos que se cerraron el mismo 2026-09-15**, las dos escribiendo esta mitad:
+
+```text
+~~D23   la columna de VideoMesh, que pide su cube-v1~~
+        RESUELTA 2026-09-15: el cube-v1 de aquí sale COMPLETE + PASS por el
+        consumidor real y las tres comparaciones pasan. `expected.json` es el
+        oráculo, y no lo lee quien mide: si lo leyera, sería el código
+        comparándose consigo mismo
+
+~~D29   el escritor atómico — esa mitad es de VideoMesh~~
+        RESUELTA 2026-09-15: publicación por rename con el volumen comprobado
+        antes de escribir un byte, destino que no se pisa, y nada que sobreviva a
+        un fallo. Seis reglas rotas a propósito, seis pruebas rojas
 ```
 
 ```text
@@ -150,18 +201,22 @@ no trata INCONCLUSIVE como PASS                           D3
 1  R0-A PASS            HECHO — SoftSight cerró S6 el 2026-08-12, y desde el
                         2026-09-14 lo comprueba `test:r0`: las nueve etapas
                         dejan huella y el sobre ata el informe a su entrada
-2  cube-v1 generado     PENDIENTE, de VideoMesh — V3 y V4 de la lista
-3  R0-B PASS            las tres comparaciones de D23, que esperan a 2
-4  se desbloquea el trabajo dependiente del contrato
+2  cube-v1 generado     HECHO 2026-09-15 — V3 y V4; sale COMPLETE + PASS con
+                        salida 0 por el consumidor real
+3  R0-B PASS            HECHO 2026-09-15 — las tres comparaciones de D23, con
+                        sus tolerancias declaradas
+4  se desbloquea el trabajo dependiente del contrato   DESBLOQUEADO
 ```
 
-**Dónde está el bloqueo hoy, dicho sin rodeos.** Del lado de SoftSight no queda
-ninguna decisión accionable: 27 de 34 están IMPLEMENTADAS y las 7 abiertas esperan
-a un consumidor que responda, a un fichero EXR, a valores dorados, a un productor
-con malla, o a una segunda plataforma.
+**Dónde está el bloqueo hoy, dicho sin rodeos.** En ningún sitio del camino de R0.
+Del lado de SoftSight quedan 30 de 34 IMPLEMENTADAS, y las 4 abiertas esperan a un
+consumidor que responda (D2), a un fichero EXR (D5), a un productor real con malla
+sobre datos de verdad (D26) o a una segunda plataforma (D28). Ninguna bloquea el
+Sprint 1.
 
-Tres de esas siete —D23, D26 y D34— cuelgan del **hito 2**, que son `V3` y `V4` de
-la lista de trabajo. Ése es el trabajo que más desbloquea por línea escrita.
+Lo único accionable desde aquí es **D2**: 32 identificadores PROPUESTOS sin
+respuesta. No se fijan desde este repositorio porque es decisión de criterio, no de
+hecho.
 
 ## Cómo se mantiene esta tabla
 
@@ -172,6 +227,9 @@ contrato, y solo si ha cambiado se revisa lo que el contrato cambió:
 shasum -a 256 docs/contrato-videomesh.md
 ```
 
-Esta vez el hash llevaba un mes sin comprobarse y la tabla había quedado vieja en
-nueve filas, con cuatro nombres de fixture que no existían. **El mecanismo estaba
-escrito desde el primer día y no sirvió de nada porque nadie lo ejecutó.**
+Y ya no hace falta acordarse de correrlo: `scripts/verify.sh` lo hace en cada
+verificación. La primera vez que la tabla quedó vieja, el hash llevaba un mes sin
+comprobarse y había nueve filas caducadas con cuatro nombres de fixture que no
+existían — **el mecanismo estaba escrito desde el primer día y no sirvió de nada
+porque nadie lo ejecutó**. La segunda vez que el contrato cambió, la verificación
+se puso roja en el mismo minuto.
