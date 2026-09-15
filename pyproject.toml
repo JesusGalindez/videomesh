@@ -7,6 +7,9 @@ dependencies = [
     "pydantic>=2.9",
 ]
 
+[project.scripts]
+videomesh = "videomesh.cli.app:main"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8.3",

@@ -32,15 +32,21 @@ Un paquete que SoftSight rechaza esta mal aunque el codigo de aqui crea que no.
 
 ## Donde va un cambio
 
-Tres capas, de dentro hacia fuera. Confundirlas es la causa habitual de que un cambio
-rompa lo que no tocaba.
+La regla de dependencia es de una direccion: `domain` -> `ports` -> `application` ->
+`providers/adapters`. Nunca al reves, y una prueba lo vigila por ausencia.
 
-1. **Dominio** — `src/videomesh/domain/`. Algebra, camaras, marcos, escala. No sabe que es
-   un fichero ni que es glTF.
+1. **Dominio** — `src/videomesh/domain/`. Algebra, camaras, marcos, escala, proyecto,
+   stages, errores. No sabe que es un fichero, ni que es glTF, ni que hay una CLI.
 2. **Contratos** — `src/videomesh/contracts/`. La frontera: serializacion estricta, sobre,
    estado publicado y los modelos **generados**. `modelos/` no se edita a mano.
-3. **Adaptadores** — `src/videomesh/adapters/`. Traducen a convenciones de fuera, y solo
+3. **Proyecto** — `src/videomesh/project/`. Lo que vive en disco: identidad, integridad,
+   sellado atomico, manifiesto del proyecto e historial de stages.
+4. **Aplicacion** — `src/videomesh/application/`. Lo que se hace con lo anterior: `cube-v1`
+   y su oraculo.
+5. **Adaptadores** — `src/videomesh/adapters/`. Traducen a convenciones de fuera, y solo
    ahi.
+6. **CLI** — `src/videomesh/cli/`. `init`, `status`, `doctor`, `resume`. Devuelve codigos
+   de salida; no decide nada que no este ya decidido mas adentro.
 
 **La regla:** si necesita saber que convencion usa otro programa, no va en la capa 1.
 
@@ -108,6 +114,8 @@ Vuelven a generar lo que este repositorio publica: `scripts/agents_md.py` · `sc
 | `test_d3_paridad.py` | D3 y D4 — V10, D23: las tres comparaciones, y R0-B. |
 | `test_estado_publicado.py` | VideoMesh declara la combinacion entera de versiones que habla — D12. |
 | `test_f1_errores_y_proyecto.py` | Core Foundation, primera pieza — errores tipados y modelo de proyecto. |
+| `test_f2_stages.py` | Core Foundation, segunda pieza — stages, determinismo y resume. |
+| `test_f3_cli.py` | Core Foundation, tercera pieza — la CLI. |
 | `test_puerta_local.py` | La verificación se ejecuta sola, y dice qué falta cuando no puede. |
 <!-- /generado: pruebas -->
 
