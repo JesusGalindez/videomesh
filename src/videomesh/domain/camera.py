@@ -16,11 +16,12 @@ from dataclasses import dataclass
 from typing import Any
 
 from videomesh.domain.algebra import comprobar_matriz
+from videomesh.domain.errores import ErrorDeContrato
 
 __all__ = ["ErrorDeCamara", "Proyeccion", "comprobar_camaras", "proyectar"]
 
 
-class ErrorDeCamara(ValueError):
+class ErrorDeCamara(ErrorDeContrato, ValueError):
     """La camara describe pixeles que no son los suyos, o no se sabe cuales."""
 
 

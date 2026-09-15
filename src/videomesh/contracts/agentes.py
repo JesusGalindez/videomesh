@@ -16,13 +16,15 @@ import pathlib
 import re
 import tomllib
 
+from videomesh.domain.errores import ErrorDeVideoMesh
+
 __all__ = ["ErrorDeBloque", "agents_md_generado", "reemplazar_bloque"]
 
 RAIZ = pathlib.Path(__file__).resolve().parents[3]
 AGENTS = RAIZ / "AGENTS.md"
 
 
-class ErrorDeBloque(RuntimeError):
+class ErrorDeBloque(ErrorDeVideoMesh, RuntimeError):
     """`AGENTS.md` ya no tiene el bloque que el generador reescribe."""
 
 

@@ -107,6 +107,7 @@ Vuelven a generar lo que este repositorio publica: `scripts/agents_md.py` · `sc
 | `test_d2_expected.py` | D2 — V4: lo que VideoMesh afirma de su propio cubo. |
 | `test_d3_paridad.py` | D3 y D4 — V10, D23: las tres comparaciones, y R0-B. |
 | `test_estado_publicado.py` | VideoMesh declara la combinacion entera de versiones que habla — D12. |
+| `test_f1_errores_y_proyecto.py` | Core Foundation, primera pieza — errores tipados y modelo de proyecto. |
 | `test_puerta_local.py` | La verificación se ejecuta sola, y dice qué falta cuando no puede. |
 <!-- /generado: pruebas -->
 

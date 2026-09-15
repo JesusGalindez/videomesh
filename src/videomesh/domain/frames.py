@@ -13,6 +13,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 from videomesh.domain.algebra import IDENTIDAD, componer, es_rigida, inversa_rigida
+from videomesh.domain.errores import ErrorDeContrato
 
 __all__ = ["MARCOS", "MEDIDO_EN", "ErrorDeMarco", "comprobar_frame_graph", "resolver_marco"]
 
@@ -25,7 +26,7 @@ MEDIDO_EN = "RECONSTRUCTION"
 Arista = Mapping[str, Any]
 
 
-class ErrorDeMarco(ValueError):
+class ErrorDeMarco(ErrorDeContrato, ValueError):
     """El grafo de marcos no dice lo que hace falta para interpretar una medida."""
 
 

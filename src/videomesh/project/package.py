@@ -19,6 +19,8 @@ import pathlib
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+from videomesh.domain.errores import ErrorDePaquete
+
 __all__ = [
     "ErrorDeIntegridad",
     "ErrorDeRuta",
@@ -35,11 +37,11 @@ _CON_SUPERFICIE = "TRIANGLE_MESH"
 _HEXADECIMAL = set("0123456789abcdef")
 
 
-class ErrorDeIntegridad(ValueError):
+class ErrorDeIntegridad(ErrorDePaquete, ValueError):
     """Lo que el manifest dice de un artifact no es lo que el artifact es."""
 
 
-class ErrorDeRuta(ValueError):
+class ErrorDeRuta(ErrorDePaquete, ValueError):
     """Un artifact no resuelve dentro del paquete, o no resuelve."""
 
 

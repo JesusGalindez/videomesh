@@ -13,12 +13,14 @@ como un paquete aprobado.
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+from videomesh.domain.errores import ErrorDeContrato
+
 __all__ = ["ErrorDeEscala", "comprobar_escala"]
 
 Presupuesto = Mapping[str, Any]
 
 
-class ErrorDeEscala(ValueError):
+class ErrorDeEscala(ErrorDeContrato, ValueError):
     """Dos campos del paquete no pueden ser ciertos a la vez.
 
     El fichero esta bien y el hash cuadra; lo que falla es lo que dice. Del otro

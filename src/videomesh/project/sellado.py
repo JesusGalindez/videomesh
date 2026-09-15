@@ -27,6 +27,7 @@ from typing import Any
 
 from videomesh.contracts.sobre import PAQUETE_DE_RECONSTRUCCION, sobre_de, volcar_documento
 from videomesh.domain.camera import comprobar_camaras
+from videomesh.domain.errores import ErrorDePaquete
 from videomesh.domain.frames import comprobar_frame_graph
 from videomesh.domain.scale import comprobar_escala
 from videomesh.project.package import comprobar_integridad, comprobar_rutas, describir_artifact
@@ -42,7 +43,7 @@ __all__ = [
 MANIFEST = "manifest.json"
 
 
-class ErrorDeSellado(RuntimeError):
+class ErrorDeSellado(ErrorDePaquete, RuntimeError):
     """El paquete no se puede publicar tal y como se ha pedido."""
 
 

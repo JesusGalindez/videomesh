@@ -20,6 +20,7 @@ from typing import Any
 from videomesh.contracts.estado import version_del_paquete
 from videomesh.contracts.generacion import ESQUEMAS
 from videomesh.contracts.serialization import volcar_json
+from videomesh.domain.errores import ErrorDeContrato
 
 __all__ = ["PAQUETE_DE_RECONSTRUCCION", "ErrorDeSobre", "sobre_de", "volcar_documento"]
 
@@ -33,7 +34,7 @@ ESQUEMA_DE = {PAQUETE_DE_RECONSTRUCCION: "reconstruction-package"}
 _CAMPOS = ("documentType", "contractVersion", "contractSchemaSha256")
 
 
-class ErrorDeSobre(ValueError):
+class ErrorDeSobre(ErrorDeContrato, ValueError):
     """El documento no declara contra que contrato se escribio. No sale del proceso."""
 
 

@@ -23,6 +23,8 @@ import pathlib
 import re
 from typing import Any
 
+from videomesh.domain.errores import ErrorDeContrato
+
 __all__ = ["ESQUEMAS", "ErrorDeEsquema", "generar_modulos"]
 
 #: Los esquemas publicados. Se leen, nunca se tocan.
@@ -44,7 +46,7 @@ esquema sha256: {sha256}
 '''
 
 
-class ErrorDeEsquema(RuntimeError):
+class ErrorDeEsquema(ErrorDeContrato, RuntimeError):
     """El esquema usa algo que este generador no sabe traducir. No se adivina."""
 
 

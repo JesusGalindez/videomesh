@@ -15,10 +15,12 @@ import json
 import math
 from typing import Any
 
+from videomesh.domain.errores import ErrorDeContrato
+
 __all__ = ["ErrorNumeroNoFinito", "volcar_json"]
 
 
-class ErrorNumeroNoFinito(ValueError):
+class ErrorNumeroNoFinito(ErrorDeContrato, ValueError):
     """Un `NaN` o un infinito llego a la serializacion. Nunca sale del proceso."""
 
 

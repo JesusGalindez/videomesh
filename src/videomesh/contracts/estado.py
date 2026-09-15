@@ -21,6 +21,7 @@ from typing import Any
 
 from videomesh.contracts.generacion import ESQUEMAS
 from videomesh.contracts.serialization import volcar_json
+from videomesh.domain.errores import ErrorDeContrato
 
 __all__ = [
     "ESTADO",
@@ -38,7 +39,7 @@ ESTADO = pathlib.Path(__file__).resolve().parents[3] / "contracts" / "estado.jso
 Combinacion = Mapping[str, Any]
 
 
-class ErrorDeCombinacion(ValueError):
+class ErrorDeCombinacion(ErrorDeContrato, ValueError):
     """La combinacion declarada no es una de las que el consumidor ha visto."""
 
 

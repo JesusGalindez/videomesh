@@ -12,6 +12,8 @@ Una prueba que solo se ha visto verde no ha demostrado que mire nada.
 
 import re
 
+from videomesh.domain.errores import ErrorDeContrato
+
 __all__ = ["ErrorDeDeriva", "comprobar_hash_declarado", "hash_declarado_en"]
 
 #: La linea de la cabecera, tal y como esta escrita: `sha256 \`<64 hex>\``.
@@ -20,7 +22,7 @@ __all__ = ["ErrorDeDeriva", "comprobar_hash_declarado", "hash_declarado_en"]
 _DECLARACION = re.compile(r"^sha256 `([0-9a-f]{64})`", re.MULTILINE)
 
 
-class ErrorDeDeriva(AssertionError):
+class ErrorDeDeriva(ErrorDeContrato, AssertionError):
     """Lo que un documento afirma y lo que el repositorio es ya no coinciden."""
 
 
