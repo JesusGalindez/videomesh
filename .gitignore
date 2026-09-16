@@ -21,3 +21,4 @@ fixtures/contracts/cube-v1/
 */project.json
 reconstruction/packages/
 production/packages/
+tools-bin/
