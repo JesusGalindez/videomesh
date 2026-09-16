@@ -302,6 +302,42 @@ juego      varios LOD, proxy de colisión, atlas grande
 Los presupuestos **los declara el destino**, y SoftSight ya tiene ese vocabulario
 en R9. Aquí se escriben los perfiles y se publican con el paquete.
 
+**Los dos primeros perfiles no hay que inventarlos: están medidos.** El
+2026-09-15, sobre un GLB de Hunyuan3D de 88,6 MB y 1.500.086 triángulos:
+
+```text
+perfil  triángulos  textura        fichero   distancia contra el original
+hero        90.004  KTX2 2048²      4,08 MB  0,089 % de la diagonal (máx)
+fondo       23.288  KTX2 1024²      0,72 MB  no medida
+```
+
+Con `gltfpack` 1.2, **binario nativo** —el de npm no trae BasisU ni WebP y falla
+diciéndolo—:
+
+```text
+hero    -si 0.06    -cc  -tc -tu normal  -tl 2048  -tq 9
+fondo   -si 0.015   -cc  -tc             -tl 1024  -tq 8
+```
+
+Dos cosas que ese `-tu normal` esconde y cuestan una tarde descubrir:
+
+**ETC1S destroza un mapa de normales.** Comprime en bloques con paleta, y un mapa
+de normales son datos y no color: los artefactos aparecen como relieve falso sobre
+superficies lisas. UASTC cuesta el triple de bytes —2,06 MB contra 0,7— y lo
+conserva. El hero entero en ETC1S son 2,2 MB en vez de 4,08; la diferencia se
+paga en el aspecto de las superficies pulidas.
+
+**Y el ahorro que importa no es el fichero, es la VRAM.** Un PNG de 2048² se
+descomprime a 16 MB en la GPU: tres mapas son 48 MB por objeto. KTX2 se queda
+comprimido en memoria. Con veinte assets en una escena, eso decide si corre en un
+móvil.
+
+Y el orden, que no es libre: si se tocan las texturas a mano —redimensionarlas,
+por ejemplo—, va **antes** de comprimir. Con `-cc` el GLB lleva
+`EXT_meshopt_compression`, cuyos desplazamientos viven dentro de la extensión y no
+donde un reescritor ingenuo los busca; hacerlo al revés produce un GLB que revienta
+al cargar con `Invalid typed array length`.
+
 Regla que se hereda de R15 y no se negocia: **un destino que no declara nada no
 obtiene PRODUCTION_READY**. Si no, el asset más vacío sería el más listo.
 
@@ -322,6 +358,17 @@ Etapa `glb`. El asset final, con `meshoptimizer` y `KTX2` para el perfil web.
 
 Las convenciones de glTF **ya viven en un solo sitio**: `adapters/gltf_transforms.py`,
 cerrado con D32. No escribas una segunda conversión de ejes.
+
+**Un aviso sobre el consumidor, comprobado el 2026-09-15:** el cargador de
+SoftSight **rechaza** el GLB que esta etapa va a producir —«este GLB requiere
+extensiones no soportadas (KHR_texture_basisu)»—, así que hoy no puede auditar ni
+siquiera su geometría. No es cosa tuya arreglarlo, pero sí de este bloque
+declararlo: si la etapa produce un formato que el verificador no lee, el veredicto
+de E4 no se puede dar y tiene que salir NOT_RUN con ese motivo, nunca un verde por
+no haber mirado.
+
+Mientras tanto, la geometría se audita sobre la variante **sin** KTX2 de la misma
+pasada: cambia el codificador de texturas, no un vértice.
 
 ### E4 — el veredicto
 
