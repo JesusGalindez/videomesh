@@ -12,6 +12,9 @@ descubrirla tarde.
 
 import json
 import pathlib
+import shutil
+
+import pytest
 
 from videomesh.cli.app import main
 
@@ -175,3 +178,51 @@ def test_el_dominio_no_importa_nada_de_fuera() -> None:
         for prohibido in prohibidos:
             assert f"import {prohibido}" not in texto, f"{ruta.name} importa {prohibido}"
             assert f"from {prohibido}" not in texto, f"{ruta.name} importa de {prohibido}"
+
+
+# --- pipeline ---------------------------------------------------------------
+
+
+def test_produce_por_la_cli_escribe_el_paquete_y_dice_donde(tmp_path: pathlib.Path) -> None:
+    ruta = tmp_path / "proyecto"
+    assert _correr("init", str(ruta))[0] == 0
+    codigo, texto = _correr("produce", str(ruta))
+    assert codigo == 0
+    assert "manifest.json" in texto
+
+
+def test_analyze_sin_ffmpeg_sale_uno_y_dice_como_instalarlo(tmp_path: pathlib.Path) -> None:
+    """El comando existe a proposito: uno ausente solo dice «no existe esa orden»."""
+    ruta = tmp_path / "proyecto"
+    _correr("init", str(ruta))
+    codigo, texto = _correr("analyze", str(ruta))
+    assert codigo == 1
+    assert "ffmpeg" in texto
+    assert "brew install" in texto
+
+
+def test_validate_pasa_el_paquete_por_el_consumidor_de_verdad(tmp_path: pathlib.Path) -> None:
+    """D1: se le pasa la ruta del manifest, nunca base64 ni el contenido."""
+    if shutil.which("node") is None:
+        pytest.skip("hace falta node")
+    ruta = tmp_path / "proyecto"
+    _correr("init", str(ruta))
+    _correr("produce", str(ruta))
+    codigo, texto = _correr("validate", str(ruta))
+    assert codigo == 0, texto
+    assert "COMPLETE" in texto
+    assert "PASS" in texto
+
+
+def test_validate_sin_paquete_lo_dice_en_vez_de_reventar(tmp_path: pathlib.Path) -> None:
+    ruta = tmp_path / "proyecto"
+    _correr("init", str(ruta))
+    codigo, texto = _correr("validate", str(ruta))
+    assert codigo == 1
+    assert "produce" in texto
+
+
+def test_la_ayuda_nombra_las_ordenes_del_pipeline() -> None:
+    _, texto = _correr("--help")
+    for orden in ("analyze", "build", "reconstruct", "produce", "validate"):
+        assert orden in texto
