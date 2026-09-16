@@ -23,7 +23,7 @@ from typing import Any
 
 from videomesh.adapters import pymeshlab, xatlas
 from videomesh.adapters.softsight import HERRAMIENTA
-from videomesh.application import retopologia
+from videomesh.application import retopologia, textura
 from videomesh.contracts.estado import (
     combinacion_declarada,
     combinaciones_admitidas,
@@ -111,6 +111,14 @@ def _proveedores() -> list[Comprobacion]:
             version="",
             instalacion=retopologia.INSTALACION,
             para="convertir triángulos en quads alineados con la forma",
+        ),
+        comprobar_proveedor(
+            "Proveedor de textura",
+            nombre=textura.PROVEEDOR,
+            instalado=textura.instalado(),
+            version="",
+            instalacion=textura.INSTALACION,
+            para="proyectar los fotogramas reales sobre la malla",
         ),
     ]
 

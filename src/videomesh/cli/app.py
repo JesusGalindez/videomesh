@@ -5,7 +5,7 @@ saber si el entorno sirve, y qué habría que rehacer— más el pipeline entero
 cadena de producción: `import` trae el paquete que se hace en Colab, y `limpieza`,
 `decimado` y `uv` lo acaban aquí, publicando cada una cuánto costó. `retopologia`
 está y **falla bien**: falta su proveedor, y sustituirlo daría una etapa de quads que
-no dice cuánto costó.
+no dice cuánto costó. `textura` está en las mismas.
 
 De los cuatro stages **hoy solo `produce` puede trabajar**: FFmpeg y COLMAP no
 están en esta máquina. Los otros tres existen igual, y esto es un cambio de
@@ -28,7 +28,7 @@ from collections.abc import Callable, Sequence
 from typing import Any
 
 from videomesh.adapters import xatlas
-from videomesh.application import normales, retopologia, uv
+from videomesh.application import normales, retopologia, textura, uv
 from videomesh.application.cadena import estado_de_la_cadena
 from videomesh.application.decimado import decimar
 from videomesh.application.densa import importar_paquete
@@ -85,6 +85,9 @@ La cadena de produccion:
   videomesh normales <ruta> [--resolucion <texeles>] [--sin-relleno]
                               hornea la normal de la malla medida sobre el atlas,
                               y publica el angulo que costo y el juicio del vecino
+  videomesh textura <ruta>
+                              proyecta los fotogramas sobre la malla. Hoy no se
+                              puede: falta TextureMesh de OpenMVS, y no se sustituye
 
 La frontera con SoftSight manda sobre todo lo demas: docs/contrato-videomesh.md.
 """
@@ -339,6 +342,24 @@ def _retopologia(argumentos: Sequence[str]) -> int:
     return 1
 
 
+def _textura(argumentos: Sequence[str]) -> int:
+    """La etapa que hoy no se puede hacer, y lo dice con sus tres partes.
+
+    No se implementa un sustituto: lo que se interpola desde la nube no es el color
+    que vio ninguna camara. El motivo esta en `textura.exigir`.
+    """
+    if not argumentos:
+        print("falta la ruta del proyecto: videomesh textura <ruta>")
+        return 1
+    abrir_proyecto(pathlib.Path(argumentos[0]))
+    textura.exigir()
+    print(
+        "el proveedor de textura esta puesto, pero la etapa no esta escrita: el encargo "
+        "la pide desde que su instrumento no estaba en esta maquina"
+    )
+    return 1
+
+
 def _uv(argumentos: Sequence[str]) -> int:
     """Corta y empaqueta el atlas y **ensena el veredicto del vecino** sobre el."""
     conocidas = ["--margen", "--iteraciones", "--destino", "--solape-maximo"]
@@ -506,6 +527,7 @@ _ORDENES: dict[str, Callable[[Sequence[str]], int]] = {
     "retopologia": _retopologia,
     "uv": _uv,
     "normales": _normales,
+    "textura": _textura,
 }
 
 

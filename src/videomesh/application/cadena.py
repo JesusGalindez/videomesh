@@ -9,6 +9,7 @@ decimado     colapso de aristas hasta un objetivo, con la distancia publicada
 retopologia  triangulos desordenados -> quads alineados      sin instrumento hoy
 uv           corte y empaquetado del atlas, con el juicio del vecino
 normales     el detalle que el decimado quito, de vuelta como mapa
+textura      los fotogramas reales proyectados sobre la malla   sin instrumento hoy
 ```
 
 Y la regla con la que se decide cada situacion, escrita una sola vez:
@@ -48,7 +49,7 @@ from enum import Enum
 from typing import Any
 
 from videomesh.adapters import xatlas
-from videomesh.application import decimado, limpieza, normales, retopologia, uv
+from videomesh.application import decimado, limpieza, normales, retopologia, textura, uv
 from videomesh.application.densa import ETAPA as DENSA
 from videomesh.application.densa import digest_de_entrada as digest_de_la_densa
 from videomesh.application.densa import manifest_de
@@ -92,6 +93,7 @@ CADENA: tuple[str, ...] = (
     retopologia.ETAPA,
     uv.ETAPA,
     normales.ETAPA,
+    textura.ETAPA,
 )
 
 #: De que depende cada etapa para poder empezar. La retopologia pide la malla
@@ -113,12 +115,16 @@ _DEPENDE_DE: dict[str, tuple[str, ...]] = {
     # describiria una superficie que ya no es la suya, asi que depende del atlas y no
     # de la malla. Es la misma razon por la que su hash de entrada lleva los dos.
     normales.ETAPA: (uv.ETAPA,),
+    # D1 proyecta los fotogramas sobre la pieza con atlas y mapa. Cuando el
+    # instrumento llegue, su entrada sera esta y no otra.
+    textura.ETAPA: (normales.ETAPA,),
 }
 
 #: Las etapas cuyo proveedor puede no estar, con la funcion que lo comprueba. Es una
 #: consulta al PATH y nada mas: no abre el proyecto ni ejecuta una etapa.
 _SIN_INSTRUMENTO: dict[str, Callable[[], str | None]] = {
     retopologia.ETAPA: retopologia.motivo_de_ausencia,
+    textura.ETAPA: textura.motivo_de_ausencia,
 }
 
 #: Que parametros usa cada etapa cuando todavia no hay informe. No son los que se
@@ -140,6 +146,7 @@ DEFECTOS_POR_DEFECTO: dict[str, dict[str, Any]] = {
         "destino": uv.DESTINO_POR_DEFECTO,
         "reposo": "vecino mas cercano sobre la malla medida",
     },
+    textura.ETAPA: {},
 }
 
 _MOTIVOS: dict[str, tuple[str, str]] = {
@@ -157,6 +164,10 @@ _MOTIVOS: dict[str, tuple[str, str]] = {
     normales.ETAPA: (
         "no se ha horneado ningun mapa de normales todavia",
         "ya no hay malla con atlas sobre la que hornear",
+    ),
+    textura.ETAPA: (
+        "no se ha proyectado ningun fotograma todavia",
+        "ya no hay pieza con atlas sobre la que proyectar",
     ),
 }
 
