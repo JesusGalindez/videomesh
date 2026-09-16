@@ -11,10 +11,20 @@ determinismo dice si volvería a salir igual, y solo lo segundo justifica saltar
 el trabajo.
 """
 
+import hashlib
+import json
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any
 
-__all__ = ["Determinismo", "EjecucionDeStage", "EstadoDeStage", "hay_que_reejecutar"]
+__all__ = [
+    "Determinismo",
+    "EjecucionDeStage",
+    "EstadoDeStage",
+    "hay_que_reejecutar",
+    "hash_de_entrada",
+]
 
 
 class EstadoDeStage(Enum):
@@ -72,6 +82,41 @@ class EjecucionDeStage:
             )
         if self.duracion_s < 0:
             raise ValueError(f"{self.stage} declara una duracion negativa: {self.duracion_s}")
+
+
+def hash_de_entrada(
+    *,
+    entradas: Sequence[str],
+    parametros: Mapping[str, Any],
+    proveedor: str,
+    version_del_proveedor: str,
+) -> str:
+    """El resumen de lo que un stage lee, con lo que lo lee y con que version.
+
+    Tres cosas entran, y las tres cambian la salida, asi que las tres tienen que
+    cambiar el hash:
+
+    - **lo que lee**: los hashes de sus entradas, en orden. Cambiar la malla de
+      arriba tiene que caducar lo de abajo (§9).
+    - **con que parametros**: decimar a otro objetivo es otro trabajo, no el
+      mismo con otra etiqueta.
+    - **con que proveedor y version**: §9 lo dice con todas las letras —los
+      proveedores cambian resultados entre versiones— y una version nueva deja el
+      registro describiendo una salida que ya no se produciria igual.
+
+    Se resume texto canonico y no `repr` de un diccionario: el orden de las claves
+    no puede depender de por donde se itero.
+    """
+    texto = json.dumps(
+        {
+            "entradas": list(entradas),
+            "parametros": {clave: parametros[clave] for clave in sorted(parametros)},
+            "proveedor": f"{proveedor} {version_del_proveedor}",
+        },
+        ensure_ascii=False,
+        sort_keys=True,
+    )
+    return hashlib.sha256(texto.encode("utf-8")).hexdigest()
 
 
 def hay_que_reejecutar(

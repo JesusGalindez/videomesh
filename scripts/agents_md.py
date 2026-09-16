@@ -7,12 +7,7 @@ scripts/agents_md.py --check    sale 1 si el fichero commiteado no esta al dia
 
 import sys
 
-from videomesh.contracts.agentes import AGENTS, agents_md_generado
-
-# El bloque generado crece una linea por fichero de prueba, asi que el techo es un
-# recordatorio y no una promesa: el encargo 04 anade un fichero por bloque —seis—
-# y el techo sube una vez y con motivo, no cada vez que molesta.
-TECHO = 160
+from videomesh.contracts.agentes import AGENTS, TECHO, agents_md_generado
 
 
 def main(argumentos: list[str]) -> int:

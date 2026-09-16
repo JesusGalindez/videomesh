@@ -11,10 +11,15 @@ dependencies = [
 videomesh = "videomesh.cli.app:main"
 
 [project.optional-dependencies]
+# La capacidad de malla —limpiar, decimar, convertir— va en su propio extra: es un
+# proveedor de produccion y no una dependencia del nucleo, que sigue siendo pydantic
+# y nada mas. `dev` la incluye porque las etapas B se prueban de verdad y no se saltan.
+malla = ["pymeshlab>=2024.12"]
 dev = [
     "pytest>=8.3",
     "ruff>=0.7",
     "mypy>=1.13",
+    "pymeshlab>=2024.12",
 ]
 
 [build-system]
@@ -52,3 +57,10 @@ exclude = ["src/videomesh/contracts/modelos/*.py"]
 python_version = "3.12"
 files = ["src", "tests"]
 strict = true
+
+# `pymeshlab` es un binding de C++ sin stubs ni marcador `py.typed`, asi que mypy no
+# puede analizarlo. Se declara aqui y no con un `type: ignore` en cada llamada: la
+# frontera con lo que no tiene tipos es una, y se escribe una vez.
+[[tool.mypy.overrides]]
+module = ["pymeshlab", "pymeshlab.*"]
+ignore_missing_imports = true

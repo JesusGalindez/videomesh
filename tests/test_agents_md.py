@@ -14,6 +14,7 @@ import pathlib
 import pytest
 
 from videomesh.contracts.agentes import (
+    TECHO,
     ErrorDeBloque,
     agents_md_generado,
     reemplazar_bloque,
@@ -21,7 +22,6 @@ from videomesh.contracts.agentes import (
 
 RAIZ = pathlib.Path(__file__).resolve().parents[1]
 AGENTS = RAIZ / "AGENTS.md"
-TECHO = 150
 
 
 def test_lo_commiteado_es_lo_que_sale_del_repositorio_de_hoy() -> None:

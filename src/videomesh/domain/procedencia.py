@@ -48,7 +48,10 @@ class Procedencia:
     estado: EstadoDeProcedencia
     productor: str
     version_del_productor: str
-    package_id: str
+    #: `None` cuando el artifact no viene de un paquete sellado de fuera sino de una
+    #: etapa de aqui. No es un hueco: el nombre de la etapa ya dice quien lo hizo, y
+    #: rellenarlo con el nombre del proyecto seria un dato inventado.
+    package_id: str | None
     fuente: str
     ruta_del_artefacto: str
     sha256_del_artefacto: str

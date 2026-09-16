@@ -2,8 +2,8 @@
 
 VideoMesh escribe paquetes de reconstruccion; **SoftSight los consume y los rechaza si
 estan mal**. No se escribe contra una especificacion: se escribe contra un programa que
-corre en esta maquina. Esto es lo que hay que saber antes del primer comando; cortoa proposito —el techo vive en `scripts/agents_md.py` y no se copia aqui, porque dos
-sitios con el mismo numero divergen— y lo demas son punteros.
+corre en esta maquina. Esto es lo que hay que saber antes del primer comando; cortoa proposito —el techo lo declara `contracts/agentes.py`, que es quien lo genera, y no
+se copia aqui: dos sitios con el mismo numero divergen— y lo demas son punteros.
 
 ## Lo primero
 
@@ -106,6 +106,7 @@ Vuelven a generar lo que este repositorio publica: `scripts/agents_md.py` · `sc
 | `test_c1_c2_integridad.py` | C1 y C2 — V6, V8 y D7: identidad del paquete e integridad de cada artifact. |
 | `test_c3_sellado.py` | C3 — V5, V7 y D29: el paquete se publica entero o no se publica. |
 | `test_cadena_1_import.py` | Encargo 04, bloque A — el paquete que llega de Colab. |
+| `test_cadena_2_malla.py` | Encargo 04, bloque B — que la malla se pueda abrir, y cuanto costo abrirla. |
 | `test_contrato_no_ha_derivado.py` | La tabla de obligaciones declara contra que contrato se escribio. Aqui se comprueba. |
 | `test_d1_cube_v1.py` | D1 — V3: el `cube-v1` de VideoMesh, consumido por SoftSight de verdad. |
 | `test_d1_imagenes.py` | D1, segunda pieza — las imagenes son evidencia, no relleno. |
@@ -130,7 +131,7 @@ Python `>=3.11,<3.13`, con `uv`.
 
 En produccion: `pydantic>=2.9`.
 
-Para trabajar: `pytest>=8.3` · `ruff>=0.7` · `mypy>=1.13`.
+Para trabajar: `pytest>=8.3` · `ruff>=0.7` · `mypy>=1.13` · `pymeshlab>=2024.12`.
 <!-- /generado: dependencias -->
 
 El `python3` del sistema es 3.9.6 y **no sirve**. COLMAP y FFmpeg no estan instalados y no

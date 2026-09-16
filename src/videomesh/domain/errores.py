@@ -26,6 +26,7 @@ __all__ = [
     "ErrorDeProyecto",
     "ErrorDeVideoMesh",
     "ManifestNoValido",
+    "MedicionNoDisponible",
     "PaqueteSinSellar",
     "ProcedenciaIncompleta",
     "ProveedorNoDisponible",
@@ -55,6 +56,16 @@ class ErrorDeProveedor(ErrorDeVideoMesh):
 
 class ProveedorNoDisponible(ErrorDeProveedor):
     """El proveedor no está instalado o no se puede ejecutar. Es de entorno."""
+
+
+class MedicionNoDisponible(ErrorDeProveedor):
+    """La medida no se puede hacer —falta la herramienta, o su version de hoy—.
+
+    Es de entorno y no de resultado: lo que falta es el instrumento, no el dato.
+    Quien la reciba publica `NOT_RUN` con su motivo y sigue, porque una etapa que
+    se para porque no puede medir deja de producir, y una que mide sin poder
+    miente. Lo segundo es lo que D3 prohibe.
+    """
 
 
 class CapacidadDeComputoAusente(ErrorDeProveedor):

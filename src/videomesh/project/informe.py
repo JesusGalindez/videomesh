@@ -26,16 +26,24 @@ from videomesh.project.store import comprobar_proyecto
 __all__ = [
     "ETAPAS",
     "INFORME",
+    "MALLA",
     "TIPO_DE_DOCUMENTO",
+    "describir_malla",
     "directorio_de_etapa",
     "escribir_informe",
     "leer_informe",
+    "malla_de_la_etapa",
+    "salida_de",
 ]
 
 #: Donde vive lo que produce cada etapa, dentro del proyecto.
 ETAPAS = "etapas"
 
 INFORME = "informe.json"
+
+#: El nombre de la malla que produce una etapa. Uno, y en un solo sitio: la etapa
+#: siguiente la busca por este nombre desde su propio directorio.
+MALLA = "malla.ply"
 
 TIPO_DE_DOCUMENTO = "videomesh.stage-report"
 
@@ -73,3 +81,44 @@ def leer_informe(proyecto: pathlib.Path, etapa: str) -> dict[str, Any] | None:
         return None
     documento: dict[str, Any] = json.loads(ruta.read_text(encoding="utf-8"))
     return documento
+
+
+def malla_de_la_etapa(proyecto: pathlib.Path, etapa: str) -> pathlib.Path:
+    """Donde escribe su malla una etapa. No comprueba que exista: la va a escribir ella."""
+    return directorio_de_etapa(proyecto, etapa) / MALLA
+
+
+def describir_malla(ruta: pathlib.Path, *, identidad: str = "malla") -> dict[str, Any]:
+    """Pesa y hashea una malla ya escrita, para que el informe pueda citarla.
+
+    Se leen los bytes de disco y no se copia lo que alguien creia que pesaba, por
+    lo mismo que en el paquete: el hash que una etapa publica es el de lo que hay.
+    """
+    import hashlib
+
+    contenido = ruta.read_bytes()
+    return {
+        "id": identidad,
+        "ruta": ruta.name,
+        "bytes": len(contenido),
+        "sha256": hashlib.sha256(contenido).hexdigest(),
+    }
+
+
+def salida_de(
+    proyecto: pathlib.Path, etapa: str, *, identidad: str = "malla"
+) -> dict[str, Any] | None:
+    """Lo que esa etapa publico como su malla, leido de su informe.
+
+    Es la entrada de la etapa siguiente, y se lee declarada en vez de rehashear el
+    fichero: el hash ya lo calculo quien lo escribio, y volver a calcularlo daria
+    dos cifras de lo mismo.
+    """
+    informe = leer_informe(proyecto, etapa)
+    if informe is None:
+        return None
+    for salida in informe.get("salidas", []):
+        if salida.get("id") == identidad:
+            entrada: dict[str, Any] = salida
+            return entrada
+    return None

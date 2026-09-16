@@ -18,10 +18,19 @@ import tomllib
 
 from videomesh.domain.errores import ErrorDeVideoMesh
 
-__all__ = ["ErrorDeBloque", "agents_md_generado", "reemplazar_bloque"]
+__all__ = ["TECHO", "ErrorDeBloque", "agents_md_generado", "reemplazar_bloque"]
 
 RAIZ = pathlib.Path(__file__).resolve().parents[3]
 AGENTS = RAIZ / "AGENTS.md"
+
+#: Cuantas lineas puede tener `AGENTS.md`, generado entero. Vive aqui y no en el
+#: script ni en la prueba porque es **el mismo numero para los dos**: estaba en los
+#: dos —150 alli, 150 alla— y el dia que uno de los dos subio, la verificacion se
+#: puso roja por una copia en vez de por el fichero.
+#:
+#: El bloque de pruebas crece una linea por fichero. El encargo 04 anade uno por
+#: bloque —seis— asi que sube una vez y con motivo, no cada vez que molesta.
+TECHO = 160
 
 
 class ErrorDeBloque(ErrorDeVideoMesh, RuntimeError):

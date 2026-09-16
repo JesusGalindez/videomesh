@@ -2,7 +2,8 @@
 
 Cuatro órdenes de Core Foundation —crear un proyecto, mirar en qué estado está,
 saber si el entorno sirve, y qué habría que rehacer— más el pipeline entero, y la
-puerta por la que entra la malla densa que se hace en Colab.
+cadena de producción: `import` trae el paquete que se hace en Colab, y `limpieza` y
+`decimado` lo acaban aquí, publicando cada una cuánto costó.
 
 De los cuatro stages **hoy solo `produce` puede trabajar**: FFmpeg y COLMAP no
 están en esta máquina. Los otros tres existen igual, y esto es un cambio de
@@ -22,9 +23,12 @@ import shutil
 import subprocess
 import sys
 from collections.abc import Callable, Sequence
+from typing import Any
 
 from videomesh.application.cadena import estado_de_la_cadena
+from videomesh.application.decimado import decimar
 from videomesh.application.densa import importar_paquete
+from videomesh.application.limpieza import MINIMO_RELATIVO_POR_DEFECTO, limpiar
 from videomesh.application.pipeline import PAQUETES, STAGES, ejecutar_stage, hash_de_entrada
 from videomesh.cli.doctor import informe_de_doctor
 from videomesh.contracts.generacion import ESQUEMAS
@@ -61,6 +65,12 @@ La cadena de produccion:
   videomesh import <ruta> <paquete> [--maquina <nombre>]
                               registra el paquete que llega de Colab como la
                               etapa densa, comprobando su integridad
+  videomesh limpieza <ruta> [--minimo-relativo <f>]
+                              quita trozos flotantes, triangulos nulos y
+                              vertices sueltos, y publica cuanto quito
+  videomesh decimado <ruta> --objetivo <n>
+                              colapso de aristas hasta n triangulos, y publica
+                              la distancia de superficie en las dos direcciones
 
 La frontera con SoftSight manda sobre todo lo demas: docs/contrato-videomesh.md.
 """
@@ -197,6 +207,105 @@ def _validate(argumentos: Sequence[str]) -> int:
     return 0
 
 
+def _banderas(
+    argumentos: Sequence[str], conocidas: Sequence[str]
+) -> tuple[list[str], dict[str, str]] | None:
+    """Separa posicionales de banderas con valor. `None` si una bandera va sin el."""
+    posicionales: list[str] = []
+    valores: dict[str, str] = {}
+    indice = 0
+    while indice < len(argumentos):
+        actual = argumentos[indice]
+        if actual.startswith("--"):
+            if actual not in conocidas:
+                return None
+            if indice + 1 >= len(argumentos):
+                return None
+            valores[actual] = argumentos[indice + 1]
+            indice += 2
+            continue
+        posicionales.append(actual)
+        indice += 1
+    return posicionales, valores
+
+
+def _resumen_de_distancia(medidas: dict[str, Any]) -> str:
+    """El numero que dice cuanto se perdio, en una linea y con su estado."""
+    distancia = medidas.get("distancia") or {}
+    if distancia.get("estado") != "MEDIDA":
+        motivo = distancia.get("motivo", "sin motivo declarado")
+        return f"  distancia de superficie   NOT_RUN — {motivo}"
+    falta = distancia["falta"]
+    sobra = distancia["sobra"]
+    return (
+        f"  distancia de superficie   falta {falta['maximo']:.3e}"
+        f" ({falta['fraccion_de_la_diagonal']:.2e} de la diagonal)"
+        f" · sobra {sobra['maximo']:.3e} ({sobra['fraccion_de_la_diagonal']:.2e})"
+        f" · suelo de ruido {distancia['suelo_de_ruido']:.2e}"
+    )
+
+
+def _limpieza(argumentos: Sequence[str]) -> int:
+    """Limpia la malla medida y **dice cuanto quito**."""
+    analizado = _banderas(argumentos, ["--minimo-relativo"])
+    if analizado is None:
+        print("uso: videomesh limpieza <ruta> [--minimo-relativo <fraccion>]")
+        return 1
+    posicionales, valores = analizado
+    if not posicionales:
+        print("uso: videomesh limpieza <ruta> [--minimo-relativo <fraccion>]")
+        return 1
+    try:
+        minimo = float(valores.get("--minimo-relativo", MINIMO_RELATIVO_POR_DEFECTO))
+    except ValueError:
+        print(f"--minimo-relativo espera un numero y recibio {valores['--minimo-relativo']!r}")
+        return 1
+
+    informe = limpiar(pathlib.Path(posicionales[0]), minimo_relativo=minimo)
+    medidas = json.loads(informe.read_text(encoding="utf-8"))["medidas"]
+    print(
+        f"limpieza: {medidas['triangulos_antes']} → {medidas['triangulos_despues']} triangulos · "
+        f"{medidas['componentes_antes']} → {medidas['componentes_despues']} componentes · "
+        f"{medidas['triangulos_degenerados']} nulos y {medidas['vertices_sueltos']} sueltos"
+    )
+    print(_resumen_de_distancia(medidas))
+    print(f"  informe: {informe}")
+    return 0
+
+
+def _decimado(argumentos: Sequence[str]) -> int:
+    """Decima hasta un objetivo de triangulos y publica lo que se perdio."""
+    analizado = _banderas(argumentos, ["--objetivo"])
+    if analizado is None:
+        print("uso: videomesh decimado <ruta> --objetivo <triangulos>")
+        return 1
+    posicionales, valores = analizado
+    if not posicionales or "--objetivo" not in valores:
+        print("uso: videomesh decimado <ruta> --objetivo <triangulos>")
+        return 1
+    try:
+        objetivo = int(valores["--objetivo"])
+    except ValueError:
+        print(f"--objetivo espera un numero entero y recibio {valores['--objetivo']!r}")
+        return 1
+
+    informe = decimar(pathlib.Path(posicionales[0]), objetivo=objetivo)
+    medidas: dict[str, Any] = json.loads(informe.read_text(encoding="utf-8"))["medidas"]
+    print(
+        f"decimado: {medidas['triangulos_antes']} → {medidas['triangulos_despues']} triangulos "
+        f"(objetivo {objetivo})"
+    )
+    print(_resumen_de_distancia(medidas))
+    contra_la_medida = medidas.get("distancia_contra_la_malla_medida")
+    if contra_la_medida is not None:
+        # Dos numeros y no uno: el de arriba dice cuanto costo decimar, y este cuanto se
+        # ha perdido desde el objeto de verdad —limpieza incluida—. Es el freno del loop.
+        resumen = _resumen_de_distancia({"distancia": contra_la_medida}).strip()
+        print(f"  contra la malla medida      {resumen}")
+    print(f"  informe: {informe}")
+    return 0
+
+
 def _import(argumentos: Sequence[str]) -> int:
     """Registra un paquete producido fuera como la salida de la etapa `densa`.
 
@@ -239,6 +348,8 @@ _ORDENES: dict[str, Callable[[Sequence[str]], int]] = {
     "validate": _validate,
     **{nombre: _stage(nombre) for nombre in STAGES},
     "import": _import,
+    "limpieza": _limpieza,
+    "decimado": _decimado,
 }
 
 
