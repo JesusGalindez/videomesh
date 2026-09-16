@@ -25,8 +25,15 @@ import importlib.metadata
 import importlib.util
 import pathlib
 from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any
 
 from videomesh.domain.errores import ErrorDeProveedor, ProveedorNoDisponible
+
+if TYPE_CHECKING:  # pragma: no cover - solo para el analisis de tipos
+    # numpy se importa **solo** para anotar: en tiempo de ejecucion no se toca, y asi
+    # `doctor`, que importa este modulo en un entorno sin el extra `malla`, sigue
+    # funcionando. Los tipos de los arreglos los declara numpy, que los trae.
+    from numpy.typing import NDArray
 
 __all__ = [
     "PROVEEDOR",
@@ -38,6 +45,7 @@ __all__ = [
     "decimar",
     "exigir",
     "instalado",
+    "a_arreglos",
     "limpiar",
     "medir",
     "version",
@@ -329,3 +337,41 @@ def a_obj(origen: pathlib.Path, destino: pathlib.Path) -> None:
     exigir()
     conjunto = _conjunto(origen)
     _escribir(conjunto, destino)
+
+
+#: La anotacion va entre comillas para que el nombre de numpy **no** se evalue al
+#: definir la funcion: el import vive bajo `TYPE_CHECKING` y en tiempo de ejecucion no
+#: existe, que es justo lo que mantiene a `doctor` funcionando sin el extra `malla`.
+def a_arreglos(ruta: pathlib.Path) -> "tuple[NDArray[Any], NDArray[Any]]":
+    """Los vertices y las caras como arreglos, que es lo que pide el cortador de UV.
+
+    Los lee el proveedor de malla —es el que sabe leer los PLY que el mismo
+    escribe— y se devuelven en el orden en que los pide quien los pide, para que el
+    cortador no tenga que saber de formatos. numpy se importa aqui dentro y no
+    arriba: `doctor` importa este modulo en un entorno donde el extra `malla` puede
+    no estar puesto, y no tiene por que fallar por eso.
+
+    Una malla con caras que no son triangulos se rechaza **con su nombre**: cortar
+    un poligono no es cortar tres triangulos, y adivinar la triangulacion seria
+    tomar una decision de geometria donde solo hace falta un mensaje.
+
+    El `MeshSet` se guarda en una variable **antes** de pedirle la malla, y no es
+    estilo: `current_mesh()` devuelve una vista sobre el objeto de C++, asi que si el
+    conjunto se queda sin ninguna referencia la vista se lee vacia. Medido el
+    2026-09-16 con un cubo de 98 vertices: con el conjunto vivo, 98; sin el, 0 — y sin
+    un error, que es lo que lo hace peligroso.
+    """
+    import numpy as np
+
+    exigir()
+    conjunto = _conjunto(ruta)
+    malla = getattr(conjunto, "current_mesh")()  # noqa: B009 - API externa
+    vertices = np.array(malla.vertex_matrix(), dtype="<f4")
+    caras = np.array(malla.face_matrix(), dtype="<u4")
+    if caras.ndim != 2 or caras.shape[1] != 3:
+        raise ErrorDeProveedor(
+            f"{ruta} trae caras que no son triangulos ({caras.shape[1] if caras.ndim == 2 else 0} "
+            "vertices por cara): esta cadena corta triangulos, y triangulizar es una decision que "
+            "no se toma aqui"
+        )
+    return vertices, caras

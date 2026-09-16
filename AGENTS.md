@@ -107,7 +107,9 @@ Vuelven a generar lo que este repositorio publica: `scripts/agents_md.py` · `sc
 | `test_c3_sellado.py` | C3 — V5, V7 y D29: el paquete se publica entero o no se publica. |
 | `test_cadena_1_import.py` | Encargo 04, bloque A — el paquete que llega de Colab. |
 | `test_cadena_2_malla.py` | Encargo 04, bloque B — que la malla se pueda abrir, y cuanto costo abrirla. |
-| `test_cadena_3_instrumentos.py` | `doctor` no decía nada de los dos instrumentos que la cadena de malla usa. |
+| `test_cadena_3_instrumentos.py` | `doctor` no decía nada de los instrumentos que la cadena de malla y atlas usa. |
+| `test_cadena_4_retopologia.py` | Encargo 04, C1 — la retopología, **declarada sin instrumento** y no sustituida. |
+| `test_cadena_5_uv.py` | Encargo 04, C2 — el atlas de UV, y el juez que lo juzga. |
 | `test_contrato_no_ha_derivado.py` | La tabla de obligaciones declara contra que contrato se escribio. Aqui se comprueba. |
 | `test_d1_cube_v1.py` | D1 — V3: el `cube-v1` de VideoMesh, consumido por SoftSight de verdad. |
 | `test_d1_imagenes.py` | D1, segunda pieza — las imagenes son evidencia, no relleno. |
@@ -132,7 +134,7 @@ Python `>=3.11,<3.13`, con `uv`.
 
 En produccion: `pydantic>=2.9`.
 
-Para trabajar: `pytest>=8.3` · `ruff>=0.7` · `mypy>=1.13` · `pymeshlab>=2024.12`.
+Para trabajar: `pytest>=8.3` · `ruff>=0.7` · `mypy>=1.13` · `pymeshlab>=2024.12` · `xatlas>=0.0.11`.
 <!-- /generado: dependencias -->
 
 El `python3` del sistema es 3.9.6 y **no sirve**. COLMAP y FFmpeg no estan instalados y no

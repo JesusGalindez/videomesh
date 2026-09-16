@@ -3,19 +3,28 @@
 Empieza en el paquete que llega de Colab y sigue hacia el asset que se usa:
 
 ```text
-densa      el paquete medido, importado de fuera
-limpieza   se van los trozos flotantes, los triangulos nulos y los vertices sueltos
-decimado   colapso de aristas hasta un objetivo, con la distancia publicada
+densa        el paquete medido, importado de fuera
+limpieza     se van los trozos flotantes, los triangulos nulos y los vertices sueltos
+decimado     colapso de aristas hasta un objetivo, con la distancia publicada
+retopologia  triangulos desordenados -> quads alineados      sin instrumento hoy
+uv           corte y empaquetado del atlas, con el juicio del vecino
 ```
 
 Y la regla con la que se decide cada situacion, escrita una sola vez:
 
 ```text
-HECHA      hay una ejecucion acabada y su entrada es la de ahora
-CADUCADA   hay una ejecucion acabada, pero su entrada ya no es la de ahora
-TOCA       no hay ejecucion acabada, y sus entradas ya estan
-ESPERA     sus entradas todavia no estan: la etapa anterior no ha acabado
+HECHA            hay una ejecucion acabada y su entrada es la de ahora
+CADUCADA         hay una ejecucion acabada, pero su entrada ya no es la de ahora
+TOCA             no hay ejecucion acabada, y sus entradas ya estan
+ESPERA           sus entradas todavia no estan: la etapa anterior no ha acabado
+SIN_INSTRUMENTO  el proveedor que la etapa necesita no esta en esta maquina
 ```
+
+`SIN_INSTRUMENTO` existe por el bloque C y conviene decir por que es un estado y no
+un fallo. Los dos proveedores de retopologia que el encargo nombra no estan aqui y no
+se pueden poner, y el encargo manda declararlo en vez de sustituirlo por otro que da
+menos. Una etapa que no se puede hacer **se dice**, para que nadie la intente ni la
+espere: mirarla en `status` tiene que bastar, sin lanzarla para descubrirlo.
 
 Las etapas **caducan en silencio** —se rehace la limpieza con otro umbral y el
 decimado que habia ya no describe esta malla—, y lo que decide no es el estado del
@@ -32,12 +41,13 @@ eso es de quien llama —en el encargo 04, `videomesh next`—.
 """
 
 import pathlib
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-from videomesh.application import decimado, limpieza
+from videomesh.adapters import xatlas
+from videomesh.application import decimado, limpieza, retopologia, uv
 from videomesh.application.densa import ETAPA as DENSA
 from videomesh.application.densa import digest_de_entrada as digest_de_la_densa
 from videomesh.application.densa import manifest_de
@@ -60,6 +70,7 @@ class Situacion(Enum):
     CADUCADA = "CADUCADA"
     TOCA = "TOCA"
     ESPERA = "ESPERA"
+    SIN_INSTRUMENTO = "SIN_INSTRUMENTO"
 
 
 @dataclass(frozen=True)
@@ -73,11 +84,35 @@ class Paso:
 
 #: El orden de la cadena. Ni alfabetico ni casual: limpiar antes de decimar, porque
 #: limpiar cambia lo que se decima.
-CADENA: tuple[str, ...] = (DENSA, limpieza.ETAPA, decimado.ETAPA)
+CADENA: tuple[str, ...] = (
+    DENSA,
+    limpieza.ETAPA,
+    decimado.ETAPA,
+    retopologia.ETAPA,
+    uv.ETAPA,
+)
 
+#: De que depende cada etapa para poder empezar. La retopologia pide la malla
+#: decimada; la etapa de UV pide **una malla de trabajo**, y la elige: la
+#: retopologizada si la hay, la decimada si no. Su hash de entrada es el de la malla
+#: que leyo, asi que el dia que la retopologia corra el atlas caduca solo y se rehace
+#: con la malla nueva — que es §9 funcionando y no una excepcion.
 _DEPENDE_DE: dict[str, tuple[str, ...]] = {
     limpieza.ETAPA: (DENSA,),
     decimado.ETAPA: (limpieza.ETAPA,),
+    retopologia.ETAPA: (decimado.ETAPA,),
+    # La etapa de UV espera a que **haya una malla de trabajo**, que es lo que de
+    # verdad lee: la elige entre las que esten hechas, y lo declara. Pedirle el
+    # decimado seria pedirle la etapa que hoy existe y no la que necesita —cuando
+    # C1 corra, la malla de trabajo sera la retopologizada y su hash de entrada
+    # cambiara solo—. Limpiar es la etapa que produce la primera malla de trabajo.
+    uv.ETAPA: (limpieza.ETAPA,),
+}
+
+#: Las etapas cuyo proveedor puede no estar, con la funcion que lo comprueba. Es una
+#: consulta al PATH y nada mas: no abre el proyecto ni ejecuta una etapa.
+_SIN_INSTRUMENTO: dict[str, Callable[[], str | None]] = {
+    retopologia.ETAPA: retopologia.motivo_de_ausencia,
 }
 
 #: Que parametros usa cada etapa cuando todavia no hay informe. No son los que se
@@ -86,6 +121,13 @@ DEFECTOS_POR_DEFECTO: dict[str, dict[str, Any]] = {
     DENSA: {},
     limpieza.ETAPA: {"minimo_relativo": limpieza.MINIMO_RELATIVO_POR_DEFECTO},
     decimado.ETAPA: {},
+    retopologia.ETAPA: {},
+    uv.ETAPA: {
+        "margen": xatlas.MARGEN_POR_DEFECTO,
+        "iteraciones": xatlas.ITERACIONES_POR_DEFECTO,
+        "destino": uv.DESTINO_POR_DEFECTO,
+        "solape_maximo": uv.SOLAPE_MAXIMO_POR_DEFECTO,
+    },
 }
 
 _MOTIVOS: dict[str, tuple[str, str]] = {
@@ -95,6 +137,11 @@ _MOTIVOS: dict[str, tuple[str, str]] = {
     ),
     limpieza.ETAPA: ("no se ha limpiado nada todavia", "ya no hay malla importada que limpiar"),
     decimado.ETAPA: ("no se ha decimado nada todavia", "ya no hay malla limpia que decimar"),
+    retopologia.ETAPA: (
+        "no se ha retopologizado nada todavia",
+        "ya no hay malla decimada que retopologizar",
+    ),
+    uv.ETAPA: ("no se ha cortado ningun atlas todavia", "ya no hay malla de trabajo que cortar"),
 }
 
 
@@ -108,7 +155,13 @@ def _digest_de(proyecto: pathlib.Path, etapa: str, parametros: Mapping[str, Any]
         return _digest_de_la_densa_importada(proyecto)
     if etapa == limpieza.ETAPA:
         return limpieza.digest_de_la_entrada(proyecto, parametros=dict(parametros))
-    return decimado.digest_de_la_entrada(proyecto, parametros=dict(parametros))
+    if etapa == decimado.ETAPA:
+        return decimado.digest_de_la_entrada(proyecto, parametros=dict(parametros))
+    if etapa == uv.ETAPA:
+        return uv.digest_de_la_entrada(proyecto, parametros=dict(parametros))
+    # La retopologia no llega aqui: sin proveedor no hay ejecucion que comparar, y
+    # `_paso` la declara antes de preguntar por su hash.
+    return None
 
 
 def _digest_de_la_densa_importada(proyecto: pathlib.Path) -> str | None:
@@ -125,6 +178,12 @@ def _digest_de_la_densa_importada(proyecto: pathlib.Path) -> str | None:
 
 def _paso(proyecto: pathlib.Path, etapa: str, hechas: Mapping[str, Situacion]) -> Paso:
     """La situacion de una etapa, con la regla escrita una sola vez."""
+    instrumento = _SIN_INSTRUMENTO.get(etapa)
+    if instrumento is not None:
+        ausencia = instrumento()
+        if ausencia is not None:
+            return Paso(etapa, Situacion.SIN_INSTRUMENTO, ausencia)
+
     for anterior in _DEPENDE_DE.get(etapa, ()):
         if hechas.get(anterior) is not Situacion.HECHA:
             return Paso(etapa, Situacion.ESPERA, f"espera a que `{anterior}` este hecha")

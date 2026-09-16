@@ -2,8 +2,10 @@
 
 Cuatro órdenes de Core Foundation —crear un proyecto, mirar en qué estado está,
 saber si el entorno sirve, y qué habría que rehacer— más el pipeline entero, y la
-cadena de producción: `import` trae el paquete que se hace en Colab, y `limpieza` y
-`decimado` lo acaban aquí, publicando cada una cuánto costó.
+cadena de producción: `import` trae el paquete que se hace en Colab, y `limpieza`,
+`decimado` y `uv` lo acaban aquí, publicando cada una cuánto costó. `retopologia`
+está y **falla bien**: falta su proveedor, y sustituirlo daría una etapa de quads que
+no dice cuánto costó.
 
 De los cuatro stages **hoy solo `produce` puede trabajar**: FFmpeg y COLMAP no
 están en esta máquina. Los otros tres existen igual, y esto es un cambio de
@@ -25,6 +27,8 @@ import sys
 from collections.abc import Callable, Sequence
 from typing import Any
 
+from videomesh.adapters import xatlas
+from videomesh.application import retopologia, uv
 from videomesh.application.cadena import estado_de_la_cadena
 from videomesh.application.decimado import decimar
 from videomesh.application.densa import importar_paquete
@@ -71,6 +75,13 @@ La cadena de produccion:
   videomesh decimado <ruta> --objetivo <n>
                               colapso de aristas hasta n triangulos, y publica
                               la distancia de superficie en las dos direcciones
+  videomesh retopologia <ruta>
+                              triangulos -> quads alineados. Hoy no se puede:
+                              falta el proveedor, y no se sustituye
+  videomesh uv <ruta> [--margen <texeles>] [--iteraciones <n>] [--solape-maximo <f>]
+                              corta y empaqueta el atlas, escribe el GLB con las
+                              coordenadas de textura, y publica el veredicto del
+                              informe de produccion de SoftSight sobre ellas
 
 La frontera con SoftSight manda sobre todo lo demas: docs/contrato-videomesh.md.
 """
@@ -306,6 +317,94 @@ def _decimado(argumentos: Sequence[str]) -> int:
     return 0
 
 
+def _retopologia(argumentos: Sequence[str]) -> int:
+    """La etapa que hoy no se puede hacer, y lo dice con sus tres partes.
+
+    No se implementa un sustituto: lo unico que el proveedor de malla sabe hacer con
+    quads conserva los vertices originales, asi que no alinearia con la forma y no
+    tendria ninguna perdida que publicar. El motivo esta en `retopologia.exigir`.
+    """
+    if not argumentos:
+        print("falta la ruta del proyecto: videomesh retopologia <ruta>")
+        return 1
+    abrir_proyecto(pathlib.Path(argumentos[0]))
+    retopologia.exigir()
+    print(
+        "el proveedor de retopologia esta puesto, pero la etapa no esta escrita: el "
+        "encargo la pide desde que su instrumento no estaba en esta maquina"
+    )
+    return 1
+
+
+def _uv(argumentos: Sequence[str]) -> int:
+    """Corta y empaqueta el atlas y **ensena el veredicto del vecino** sobre el."""
+    conocidas = ["--margen", "--iteraciones", "--destino", "--solape-maximo"]
+    analizado = _banderas(argumentos, conocidas)
+    if analizado is None or not analizado[0]:
+        print(
+            "uso: videomesh uv <ruta> [--margen <texeles>] [--iteraciones <n>] "
+            "[--destino <nombre>] [--solape-maximo <fraccion>]"
+        )
+        return 1
+    posicionales, valores = analizado
+    try:
+        margen = int(valores.get("--margen", xatlas.MARGEN_POR_DEFECTO))
+        iteraciones = int(valores.get("--iteraciones", xatlas.ITERACIONES_POR_DEFECTO))
+        solape = float(valores.get("--solape-maximo", uv.SOLAPE_MAXIMO_POR_DEFECTO))
+    except ValueError:
+        print("hacen falta numeros en --margen, --iteraciones y --solape-maximo")
+        return 1
+
+    informe = uv.cortar_y_empaquetar(
+        pathlib.Path(posicionales[0]),
+        margen=margen,
+        iteraciones=iteraciones,
+        destino=valores.get("--destino", uv.DESTINO_POR_DEFECTO),
+        solape_maximo=solape,
+    )
+    medidas: dict[str, Any] = json.loads(informe.read_text(encoding="utf-8"))["medidas"]
+    print(
+        f"uv: {medidas['islas']} islas · {medidas['vertices_antes']} → "
+        f"{medidas['vertices_despues']} vertices ({medidas['vertices_anadidos_por_las_costuras']} "
+        f"por las costuras) · {medidas['triangulos']} triangulos"
+    )
+    print(
+        f"  empaquetado {medidas['empaquetado']['ancho']}×{medidas['empaquetado']['alto']} "
+        f"(margen {margen}, iteraciones {iteraciones})"
+    )
+    print(_resumen_de_distancia(medidas))
+    contra_la_medida = medidas.get("distancia_contra_la_malla_medida")
+    if contra_la_medida is not None:
+        resumen = _resumen_de_distancia({"distancia": contra_la_medida}).strip()
+        print(f"  contra la malla medida      {resumen}")
+    _resumen_del_juicio(json.loads(informe.read_text(encoding="utf-8"))["veredicto_del_vecino"])
+    print(f"  informe: {informe}")
+    return 0
+
+
+def _resumen_del_juicio(veredicto: dict[str, Any]) -> None:
+    """El veredicto del vecino, con sus numeros y no con los nuestros."""
+    if veredicto["estado"] != "MEDIDO":
+        print(f"  informe del vecino          NOT_RUN — {veredicto['motivo']}")
+        return
+    motivo = f" · {veredicto['motivo']}" if veredicto.get("motivo") else ""
+    print(f"  informe del vecino          {veredicto['certificacion']}{motivo}")
+    maestra = veredicto.get("maestra")
+    if not maestra:
+        return
+    medido = maestra["uv"] or {}
+    veredictos = maestra.get("veredictos") or {}
+    if not medido.get("present"):
+        print(f"    uv                        sin coordenadas ({medido.get('reason', '')})")
+        return
+    print(
+        f"    uv                        solape {medido['overlapRatio'] * 100:.1f} % · "
+        f"uso {medido['utilization'] * 100:.0f} % · {medido['degenerateTriangles']} degenerados · "
+        f"{medido['outsideUnitSquare']} fuera del cuadrado"
+    )
+    print(f"    veredictos                {veredictos}")
+
+
 def _import(argumentos: Sequence[str]) -> int:
     """Registra un paquete producido fuera como la salida de la etapa `densa`.
 
@@ -350,6 +449,8 @@ _ORDENES: dict[str, Callable[[Sequence[str]], int]] = {
     "import": _import,
     "limpieza": _limpieza,
     "decimado": _decimado,
+    "retopologia": _retopologia,
+    "uv": _uv,
 }
 
 

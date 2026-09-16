@@ -21,7 +21,9 @@ import shutil
 from dataclasses import dataclass
 from typing import Any
 
+from videomesh.adapters import pymeshlab, xatlas
 from videomesh.adapters.softsight import HERRAMIENTA
+from videomesh.application import retopologia
 from videomesh.contracts.estado import (
     combinacion_declarada,
     combinaciones_admitidas,
@@ -33,7 +35,7 @@ __all__ = [
     "Comprobacion",
     "comprobar_herramienta_de_medida",
     "comprobar_paquete_de_referencia",
-    "comprobar_proveedor_de_malla",
+    "comprobar_proveedor",
     "importes_sin_resolver",
     "informe_de_doctor",
 ]
@@ -76,19 +78,41 @@ def importes_sin_resolver(texto: str, base: pathlib.Path) -> list[str]:
     ]
 
 
-def _proveedor_de_malla() -> Comprobacion:
-    """El adaptador sabe lo suyo y `doctor` no repite sus constantes.
+def _proveedores() -> list[Comprobacion]:
+    """Los tres proveedores de las etapas de malla y atlas, cada uno con su fila.
 
-    Se importa el módulo y **no la librería**: `adapters.pymeshlab` solo la importa
-    dentro de las funciones que la usan, así que preguntar por ella aquí no la trae.
+    Se importan los módulos y **no las librerías**: los adaptadores solo las importan
+    dentro de las funciones que las usan, así que preguntar por ellas aquí no las trae
+    — y `doctor` tiene que funcionar en un entorno sin el extra `malla` puesto.
     """
-    from videomesh.adapters import pymeshlab
-
-    return comprobar_proveedor_de_malla(
-        instalado=pymeshlab.instalado(),
-        version=pymeshlab.version(),
-        instalacion=pymeshlab.INSTALACION,
-    )
+    return [
+        comprobar_proveedor(
+            "Proveedor de malla",
+            nombre=pymeshlab.PROVEEDOR,
+            instalado=pymeshlab.instalado(),
+            version=pymeshlab.version(),
+            instalacion=pymeshlab.INSTALACION,
+            para="limpieza, decimado y las etapas de malla que vienen después",
+        ),
+        comprobar_proveedor(
+            "Proveedor de UV",
+            nombre=xatlas.PROVEEDOR,
+            instalado=xatlas.instalado(),
+            version=xatlas.version(),
+            instalacion=xatlas.INSTALACION,
+            para="cortar y empaquetar el atlas de coordenadas de textura",
+        ),
+        comprobar_proveedor(
+            "Proveedor de retopología",
+            nombre=retopologia.PROVEEDOR,
+            instalado=retopologia.instalado(),
+            # Ninguno de los dos sabe decir su versión de una forma que se pueda leer
+            # sin ejecutarlo, y ejecutarlo para preguntarle sería otra cosa.
+            version="",
+            instalacion=retopologia.INSTALACION,
+            para="convertir triángulos en quads alineados con la forma",
+        ),
+    ]
 
 
 def _consumidor() -> Comprobacion:
@@ -169,28 +193,38 @@ def comprobar_herramienta_de_medida(ruta: pathlib.Path) -> Comprobacion:
     )
 
 
-def comprobar_proveedor_de_malla(
-    *, instalado: bool, version: str, instalacion: str
+def comprobar_proveedor(
+    que: str,
+    *,
+    nombre: str,
+    instalado: bool,
+    version: str,
+    instalacion: str,
+    para: str,
 ) -> Comprobacion:
-    """El proveedor de las etapas de malla: un extra de Python, no un binario.
+    """Un proveedor de una etapa, sea un extra de Python o un programa de fuera.
 
-    Los tres datos llegan por argumento —y no se leen del adaptador aquí dentro—
-    porque así el caso rojo se escribe sin desinstalar nada. Se pregunta por el
-    módulo y no se importa: `doctor` tiene que poder decir que falta sin que su
-    propio informe dependa de que esté.
+    Los datos llegan por argumento —y no se leen del adaptador aquí dentro— porque así
+    el caso rojo se escribe sin desinstalar nada. Se pregunta por el módulo y no se
+    importa: `doctor` tiene que poder decir que falta sin que su propio informe dependa
+    de que esté.
 
-    La versión se publica porque **entra en el hash de entrada** de cada etapa
-    (§9): un `pymeshlab` nuevo deja el registro describiendo una salida que ya no
-    se produciría, y sin el número a la vista eso se lee como una etapa caducada
-    sin motivo.
+    La versión se publica porque **entra en el hash de entrada** de cada etapa (§9): un
+    proveedor nuevo deja el registro describiendo una salida que ya no se produciría, y
+    sin el número a la vista eso se lee como una etapa caducada sin motivo. Los que no
+    saben decir su versión la dejan vacía, y la fila lo dice con el nombre solo.
+
+    `bloquea=False` siempre, y por la misma razón que COLMAP y FFmpeg: lo que falta de
+    una etapa de malla se **reporta**, y el paquete base —R0, que es JSON, hashes y
+    álgebra— funciona sin ello.
     """
     if instalado:
-        return Comprobacion("Proveedor de malla", "DISPONIBLE", f"pymeshlab {version}", False)
+        detalle = f"{nombre} {version}".strip()
+        return Comprobacion(que, "DISPONIBLE", detalle, False)
     return Comprobacion(
-        "Proveedor de malla",
+        que,
         "AUSENTE",
-        f"falta `pymeshlab`, que hace falta para limpieza, decimado y las etapas de malla "
-        f"que vienen después.\n  se instala con: {instalacion}",
+        f"falta `{nombre}`, que hace falta para {para}.\n  se instala con: {instalacion}",
         False,
     )
 
@@ -237,10 +271,9 @@ def _softsight() -> list[Comprobacion]:
 
 def informe_de_doctor() -> dict[str, Any]:
     """El informe entero, en la forma que lee una máquina."""
-    pymeshlab = _proveedor_de_malla()
     comprobaciones = [
         *_softsight(),
-        pymeshlab,
+        *_proveedores(),
         _binario("FFmpeg", "ffmpeg", bloquea=False),
         _binario("COLMAP", "colmap", bloquea=False),
         _binario("Node", "node", bloquea=True),

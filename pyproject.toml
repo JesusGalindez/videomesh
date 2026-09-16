@@ -13,13 +13,20 @@ videomesh = "videomesh.cli.app:main"
 [project.optional-dependencies]
 # La capacidad de malla —limpiar, decimar, convertir— va en su propio extra: es un
 # proveedor de produccion y no una dependencia del nucleo, que sigue siendo pydantic
-# y nada mas. `dev` la incluye porque las etapas B se prueban de verdad y no se saltan.
-malla = ["pymeshlab>=2024.12"]
+# y nada mas. `dev` la incluye porque las etapas B y C se prueban de verdad y no se
+# saltan.
+#
+# `xatlas` es de la misma familia y por el mismo motivo: corta y empaqueta el atlas
+# de coordenadas de textura, que es la etapa C2. Los dos son proveedores y los dos
+# van con su version al registro de cada etapa, porque cambian resultados entre
+# versiones (§9).
+malla = ["pymeshlab>=2024.12", "xatlas>=0.0.11"]
 dev = [
     "pytest>=8.3",
     "ruff>=0.7",
     "mypy>=1.13",
     "pymeshlab>=2024.12",
+    "xatlas>=0.0.11",
 ]
 
 [build-system]
@@ -58,9 +65,9 @@ python_version = "3.12"
 files = ["src", "tests"]
 strict = true
 
-# `pymeshlab` es un binding de C++ sin stubs ni marcador `py.typed`, asi que mypy no
-# puede analizarlo. Se declara aqui y no con un `type: ignore` en cada llamada: la
-# frontera con lo que no tiene tipos es una, y se escribe una vez.
+# `pymeshlab` y `xatlas` son bindings de C++ sin stubs ni marcador `py.typed`, asi que
+# mypy no puede analizarlos. Se declaran aqui y no con un `type: ignore` en cada
+# llamada: la frontera con lo que no tiene tipos es una, y se escribe una vez.
 [[tool.mypy.overrides]]
-module = ["pymeshlab", "pymeshlab.*"]
+module = ["pymeshlab", "pymeshlab.*", "xatlas", "xatlas.*"]
 ignore_missing_imports = true
