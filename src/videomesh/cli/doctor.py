@@ -21,6 +21,7 @@ import shutil
 from dataclasses import dataclass
 from typing import Any
 
+from videomesh.adapters.softsight import HERRAMIENTA
 from videomesh.contracts.estado import (
     combinacion_declarada,
     combinaciones_admitidas,
@@ -30,7 +31,9 @@ from videomesh.contracts.generacion import ESQUEMAS
 
 __all__ = [
     "Comprobacion",
+    "comprobar_herramienta_de_medida",
     "comprobar_paquete_de_referencia",
+    "comprobar_proveedor_de_malla",
     "importes_sin_resolver",
     "informe_de_doctor",
 ]
@@ -71,6 +74,21 @@ def importes_sin_resolver(texto: str, base: pathlib.Path) -> list[str]:
         for especificador in _IMPORTE.findall(texto)
         if not (base / especificador).is_file()
     ]
+
+
+def _proveedor_de_malla() -> Comprobacion:
+    """El adaptador sabe lo suyo y `doctor` no repite sus constantes.
+
+    Se importa el módulo y **no la librería**: `adapters.pymeshlab` solo la importa
+    dentro de las funciones que la usan, así que preguntar por ella aquí no la trae.
+    """
+    from videomesh.adapters import pymeshlab
+
+    return comprobar_proveedor_de_malla(
+        instalado=pymeshlab.instalado(),
+        version=pymeshlab.version(),
+        instalacion=pymeshlab.INSTALACION,
+    )
 
 
 def _consumidor() -> Comprobacion:
@@ -128,12 +146,62 @@ def comprobar_paquete_de_referencia(manifest: pathlib.Path) -> Comprobacion:
     )
 
 
+def comprobar_herramienta_de_medida(ruta: pathlib.Path) -> Comprobacion:
+    """El fichero por el que `diffMeshes` de SoftSight mide la distancia.
+
+    Es el instrumento del criterio de cierre del encargo 04 —«el número que dice
+    cuánto se perdió»—, así que una etapa que decima o que mueve vértices depende
+    de él. Sin él, `distancia_de_superficie` levanta `MedicionNoDisponible` y la
+    etapa publica `NOT_RUN` con su motivo, que es correcto pero llega tarde: se
+    descubre al correr la etapa en vez de al empezar el día.
+
+    Recibe la ruta como argumento por lo de siempre: para que el caso rojo se
+    escriba sin mover SoftSight de sitio.
+    """
+    if ruta.is_file():
+        return Comprobacion("SoftSight, herramienta de medida", "DISPONIBLE", str(ruta), False)
+    return Comprobacion(
+        "SoftSight, herramienta de medida",
+        "AUSENTE",
+        f"falta {ruta}: es la puerta de medida del vecino, no una copia local. "
+        "Sin ella las etapas de malla publican NOT_RUN en vez de su distancia",
+        False,
+    )
+
+
+def comprobar_proveedor_de_malla(
+    *, instalado: bool, version: str, instalacion: str
+) -> Comprobacion:
+    """El proveedor de las etapas de malla: un extra de Python, no un binario.
+
+    Los tres datos llegan por argumento —y no se leen del adaptador aquí dentro—
+    porque así el caso rojo se escribe sin desinstalar nada. Se pregunta por el
+    módulo y no se importa: `doctor` tiene que poder decir que falta sin que su
+    propio informe dependa de que esté.
+
+    La versión se publica porque **entra en el hash de entrada** de cada etapa
+    (§9): un `pymeshlab` nuevo deja el registro describiendo una salida que ya no
+    se produciría, y sin el número a la vista eso se lee como una etapa caducada
+    sin motivo.
+    """
+    if instalado:
+        return Comprobacion("Proveedor de malla", "DISPONIBLE", f"pymeshlab {version}", False)
+    return Comprobacion(
+        "Proveedor de malla",
+        "AUSENTE",
+        f"falta `pymeshlab`, que hace falta para limpieza, decimado y las etapas de malla "
+        f"que vienen después.\n  se instala con: {instalacion}",
+        False,
+    )
+
+
 def _softsight() -> list[Comprobacion]:
     filas = [
         _consumidor(),
         comprobar_paquete_de_referencia(
             ESQUEMAS.parent / "artifacts" / "cube-v1" / "manifest.json"
         ),
+        comprobar_herramienta_de_medida(HERRAMIENTA),
     ]
 
     registro = ESQUEMAS / "registry.json"
@@ -169,8 +237,10 @@ def _softsight() -> list[Comprobacion]:
 
 def informe_de_doctor() -> dict[str, Any]:
     """El informe entero, en la forma que lee una máquina."""
+    pymeshlab = _proveedor_de_malla()
     comprobaciones = [
         *_softsight(),
+        pymeshlab,
         _binario("FFmpeg", "ffmpeg", bloquea=False),
         _binario("COLMAP", "colmap", bloquea=False),
         _binario("Node", "node", bloquea=True),

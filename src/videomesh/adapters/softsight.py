@@ -135,5 +135,13 @@ def distancia_de_superficie(
         # falta y b→a superficie que sobra.
         "falta": direccion(diff["aToB"]),
         "sobra": direccion(diff["bToA"]),
+        # Los deltas de topologia, tal cual los publica el vecino. Se copian crudos
+        # a proposito: son suyos y renombrarlos seria una segunda version de sus
+        # numeros. Con una advertencia que cuesta una tarde no saber, y esta
+        # comprobado en su `meshDiff.ts`: **`watertight` aqui no es un estado, es un
+        # cambio** — vale `null` cuando las dos mallas cierran igual, y entonces se
+        # lee como «no se midio» cuando dice «no cambio». La pregunta «¿quedo
+        # cerrada?» se responde con el `aristas_de_borde` de la salida, que publica
+        # el informe de la etapa desde B1: cero es cerrada.
         "topologia": diff["topology"],
     }

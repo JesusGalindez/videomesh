@@ -107,6 +107,7 @@ Vuelven a generar lo que este repositorio publica: `scripts/agents_md.py` · `sc
 | `test_c3_sellado.py` | C3 — V5, V7 y D29: el paquete se publica entero o no se publica. |
 | `test_cadena_1_import.py` | Encargo 04, bloque A — el paquete que llega de Colab. |
 | `test_cadena_2_malla.py` | Encargo 04, bloque B — que la malla se pueda abrir, y cuanto costo abrirla. |
+| `test_cadena_3_instrumentos.py` | `doctor` no decía nada de los dos instrumentos que la cadena de malla usa. |
 | `test_contrato_no_ha_derivado.py` | La tabla de obligaciones declara contra que contrato se escribio. Aqui se comprueba. |
 | `test_d1_cube_v1.py` | D1 — V3: el `cube-v1` de VideoMesh, consumido por SoftSight de verdad. |
 | `test_d1_imagenes.py` | D1, segunda pieza — las imagenes son evidencia, no relleno. |
