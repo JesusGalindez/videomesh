@@ -28,7 +28,7 @@ from collections.abc import Callable, Sequence
 from typing import Any
 
 from videomesh.adapters import xatlas
-from videomesh.application import retopologia, uv
+from videomesh.application import normales, retopologia, uv
 from videomesh.application.cadena import estado_de_la_cadena
 from videomesh.application.decimado import decimar
 from videomesh.application.densa import importar_paquete
@@ -82,6 +82,9 @@ La cadena de produccion:
                               corta y empaqueta el atlas, escribe el GLB con las
                               coordenadas de textura, y publica el veredicto del
                               informe de produccion de SoftSight sobre ellas
+  videomesh normales <ruta> [--resolucion <texeles>] [--sin-relleno]
+                              hornea la normal de la malla medida sobre el atlas,
+                              y publica el angulo que costo y el juicio del vecino
 
 La frontera con SoftSight manda sobre todo lo demas: docs/contrato-videomesh.md.
 """
@@ -382,6 +385,57 @@ def _uv(argumentos: Sequence[str]) -> int:
     return 0
 
 
+def _normales(argumentos: Sequence[str]) -> int:
+    """Hornea el mapa y **ensena el angulo que costo**, con el juicio del vecino al lado."""
+    conocidas = ["--resolucion", "--destino", "--sin-relleno"]
+    analizado = _banderas(argumentos, conocidas)
+    if analizado is None or not analizado[0]:
+        print(
+            "uso: videomesh normales <ruta> [--resolucion <texeles>] [--destino <nombre>] "
+            "[--sin-relleno]"
+        )
+        return 1
+    posicionales, valores = analizado
+    try:
+        resolucion = int(valores.get("--resolucion", normales.RESOLUCION_POR_DEFECTO))
+    except ValueError:
+        print("hacen falta numeros en --resolucion")
+        return 1
+
+    informe = normales.hornear(
+        pathlib.Path(posicionales[0]),
+        resolucion=resolucion,
+        pullpush="--sin-relleno" not in valores,
+        destino=valores.get("--destino", uv.DESTINO_POR_DEFECTO),
+    )
+    documento: dict[str, Any] = json.loads(informe.read_text(encoding="utf-8"))
+    medidas = documento["medidas"]
+    angulo = medidas["angulo"]
+    print(
+        f"normales: {medidas['atlas']['triangulos']} triangulos sobre un atlas "
+        f"{medidas['resolucion']['lado']}×{medidas['resolucion']['lado']}"
+    )
+    print(
+        f"  angulo contra lo pedido      medio {angulo['medio']:.3f}° · p95 {angulo['p95']:.3f}° "
+        f"· maximo {angulo['maximo']:.3f}° "
+        f"(suelo del formato {angulo['suelo_de_cuantizacion']:.3f}°)"
+    )
+    paso = medidas["paso_de_la_malla_medida"]
+    vecino = medidas["vecino_mas_cercano"]
+    print(
+        f"  paso de la medida            mediano {paso['mediano']:.6g} · p90 {paso['p90']:.6g} "
+        f"({paso['muestras']:.0f} muestras)"
+    )
+    print(
+        f"  vecino mas cercano           mediana {vecino['mediana']:.6g} · "
+        f"maxima {vecino['maxima']:.6g}"
+    )
+    print(_resumen_de_distancia(medidas))
+    _resumen_del_juicio(documento["veredicto_del_vecino"])
+    print(f"  informe: {informe}")
+    return 0
+
+
 def _resumen_del_juicio(veredicto: dict[str, Any]) -> None:
     """El veredicto del vecino, con sus numeros y no con los nuestros."""
     if veredicto["estado"] != "MEDIDO":
@@ -451,6 +505,7 @@ _ORDENES: dict[str, Callable[[Sequence[str]], int]] = {
     "decimado": _decimado,
     "retopologia": _retopologia,
     "uv": _uv,
+    "normales": _normales,
 }
 
 

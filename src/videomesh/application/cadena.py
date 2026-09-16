@@ -8,6 +8,7 @@ limpieza     se van los trozos flotantes, los triangulos nulos y los vertices su
 decimado     colapso de aristas hasta un objetivo, con la distancia publicada
 retopologia  triangulos desordenados -> quads alineados      sin instrumento hoy
 uv           corte y empaquetado del atlas, con el juicio del vecino
+normales     el detalle que el decimado quito, de vuelta como mapa
 ```
 
 Y la regla con la que se decide cada situacion, escrita una sola vez:
@@ -47,7 +48,7 @@ from enum import Enum
 from typing import Any
 
 from videomesh.adapters import xatlas
-from videomesh.application import decimado, limpieza, retopologia, uv
+from videomesh.application import decimado, limpieza, normales, retopologia, uv
 from videomesh.application.densa import ETAPA as DENSA
 from videomesh.application.densa import digest_de_entrada as digest_de_la_densa
 from videomesh.application.densa import manifest_de
@@ -90,6 +91,7 @@ CADENA: tuple[str, ...] = (
     decimado.ETAPA,
     retopologia.ETAPA,
     uv.ETAPA,
+    normales.ETAPA,
 )
 
 #: De que depende cada etapa para poder empezar. La retopologia pide la malla
@@ -107,6 +109,10 @@ _DEPENDE_DE: dict[str, tuple[str, ...]] = {
     # C1 corra, la malla de trabajo sera la retopologizada y su hash de entrada
     # cambiara solo—. Limpiar es la etapa que produce la primera malla de trabajo.
     uv.ETAPA: (limpieza.ETAPA,),
+    # El horneado se escribe **en el espacio de una UV**: sin atlas vigente el mapa
+    # describiria una superficie que ya no es la suya, asi que depende del atlas y no
+    # de la malla. Es la misma razon por la que su hash de entrada lleva los dos.
+    normales.ETAPA: (uv.ETAPA,),
 }
 
 #: Las etapas cuyo proveedor puede no estar, con la funcion que lo comprueba. Es una
@@ -128,6 +134,12 @@ DEFECTOS_POR_DEFECTO: dict[str, dict[str, Any]] = {
         "destino": uv.DESTINO_POR_DEFECTO,
         "solape_maximo": uv.SOLAPE_MAXIMO_POR_DEFECTO,
     },
+    normales.ETAPA: {
+        "resolucion": normales.RESOLUCION_POR_DEFECTO,
+        "pullpush": True,
+        "destino": uv.DESTINO_POR_DEFECTO,
+        "reposo": "vecino mas cercano sobre la malla medida",
+    },
 }
 
 _MOTIVOS: dict[str, tuple[str, str]] = {
@@ -142,6 +154,10 @@ _MOTIVOS: dict[str, tuple[str, str]] = {
         "ya no hay malla decimada que retopologizar",
     ),
     uv.ETAPA: ("no se ha cortado ningun atlas todavia", "ya no hay malla de trabajo que cortar"),
+    normales.ETAPA: (
+        "no se ha horneado ningun mapa de normales todavia",
+        "ya no hay malla con atlas sobre la que hornear",
+    ),
 }
 
 
@@ -159,6 +175,8 @@ def _digest_de(proyecto: pathlib.Path, etapa: str, parametros: Mapping[str, Any]
         return decimado.digest_de_la_entrada(proyecto, parametros=dict(parametros))
     if etapa == uv.ETAPA:
         return uv.digest_de_la_entrada(proyecto, parametros=dict(parametros))
+    if etapa == normales.ETAPA:
+        return normales.digest_de_la_entrada(proyecto, parametros=dict(parametros))
     # La retopologia no llega aqui: sin proveedor no hay ejecucion que comparar, y
     # `_paso` la declara antes de preguntar por su hash.
     return None

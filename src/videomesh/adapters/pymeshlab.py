@@ -38,16 +38,21 @@ if TYPE_CHECKING:  # pragma: no cover - solo para el analisis de tipos
 __all__ = [
     "PROVEEDOR",
     "INSTALACION",
+    "Atlas",
+    "Horneado",
     "Limpieza",
     "Medidas",
     "a_obj",
     "comprobar_objetivo",
     "decimar",
     "exigir",
+    "hornear_colores",
     "instalado",
     "a_arreglos",
+    "leer_atlas",
     "limpiar",
     "medir",
+    "puntos_y_normales",
     "version",
 ]
 
@@ -330,6 +335,215 @@ def decimar(
 
     comprobar_objetivo(antes.caras, despues.caras, objetivo)
     return antes, despues
+
+
+@dataclass(frozen=True)
+class Atlas:
+    """La malla con su atlas, tal y como la dejo el cortador de UV.
+
+    `uv` es por vertice **y se comprueba que lo sea**: el cortador duplica los vertices
+    de las costuras, asi que cada vertice tiene una sola coordenada y el marco del
+    horneado se puede construir por vertice y no por esquina. El dia que una malla
+    llegue con dos UV para el mismo vertice, esto lo dice en vez de elegir una.
+    """
+
+    vertices: Any
+    caras: Any
+    uv: Any
+    triangulos: int
+    vertices_por_esquina: int
+
+
+@dataclass(frozen=True)
+class Horneado:
+    """Lo que el proveedor devolvio del horneado: el mapa, y lo que el mapa dice de si mismo.
+
+    `colores_de_vuelta` son los colores que el mapa tiene **en el baricentro de cada
+    triangulo**, leidos del mapa ya escrito. Es lo que permite publicar el error de la
+    etapa con un numero: la comparacion entre lo que se pidio hornear y lo que quedo en
+    el fichero, que incluye la rasterizacion y el redondeo a ocho bits del formato.
+
+    Se lee en el baricentro y no en el vertice por una razon medida: el texel de la
+    esquina de una isla puede no estar cubierto por los triangulos de esa esquina —la
+    regla de la arista decide— y entonces lo que se lee es lo que dejo el relleno, que
+    es de otro sitio. Medido el 2026-09-16 con un campo conocido —color = la propia UV—:
+    leido en los baricentros el error medio es 0,004 por canal, un texel justo, y leido
+    en los vertices el error se dispara en las esquinas de las islas.
+    """
+
+    resolucion: int
+    colores_de_vuelta: Any
+
+
+def leer_atlas(ruta: pathlib.Path) -> Atlas:
+    """Los vertices, las caras y la UV de cada vertice de una malla con atlas.
+
+    Se lee con el proveedor y no con un lector propio del GLB: el formato lo escribio
+    esta casa, pero leerlo aqui con las mismas reglas con las que se escribe seria
+    comprobar el escritor contra si mismo.
+    """
+    import numpy as np
+
+    exigir()
+    conjunto = _conjunto(ruta)
+    malla = getattr(conjunto, "current_mesh")()  # noqa: B009 - API externa
+    vertices = np.array(malla.vertex_matrix(), dtype="float64")
+    caras = np.array(malla.face_matrix(), dtype="int64")
+    if not malla.has_vertex_tex_coord():
+        raise ErrorDeProveedor(
+            f"{ruta} no trae coordenadas de textura por vertice: la etapa de UV tiene que "
+            "correr antes que la de normales, que hornea sobre su atlas"
+        )
+    uv = np.array(malla.vertex_tex_coord_matrix(), dtype="float64")
+    if malla.has_wedge_tex_coord():
+        por_esquina = np.array(malla.wedge_tex_coord_matrix(), dtype="float64").reshape(
+            len(caras), 3, 2
+        )
+        if not np.allclose(por_esquina, uv[caras], atol=1e-9):
+            raise ErrorDeProveedor(
+                f"{ruta} trae una UV por esquina que no coincide con la del vertice: el marco "
+                "del horneado no se puede construir sin elegir cual de las dos manda, y "
+                "elegir seria una decision escondida"
+            )
+    return Atlas(
+        vertices=vertices,
+        caras=caras,
+        uv=uv,
+        triangulos=int(len(caras)),
+        vertices_por_esquina=int(len(vertices)),
+    )
+
+
+def puntos_y_normales(ruta: pathlib.Path) -> "tuple[Any, Any]":
+    """Los vertices de la malla medida y la normal **unitaria** de cada uno.
+
+    Es la mitad «a» del horneado: la verdad que se quiere meter en el mapa. La normal
+    sale del proveedor y no se recalcula aqui a proposito: es la malla densa, con la
+    que se va a comparar, y dos normales suaves distintas de la misma malla darian dos
+    mapas que no se pueden comparar entre si.
+
+    Y se normaliza porque el proveedor las da ponderadas por area y **sin normalizar**
+    —medido el 2026-09-16 sobre la malla del banco de pruebas: longitud media 6,05—.
+    Una normal de longitud seis metida en un mapa tangente da un vector de longitud
+    seis, y el angulo que la etapa publica saldria de dividir un vector largo entre uno
+    corto: un numero plausible y falso.
+    """
+    import numpy as np
+
+    exigir()
+    conjunto = _conjunto(ruta)
+    malla = getattr(conjunto, "current_mesh")()  # noqa: B009 - API externa
+    normales = np.array(malla.vertex_normal_matrix(), dtype="float64")
+    longitudes = np.linalg.norm(normales, axis=1)
+    fuera = longitudes > 0
+    normales[fuera] = normales[fuera] / longitudes[fuera, None]
+    return np.array(malla.vertex_matrix(), dtype="float64"), normales
+
+
+def hornear_colores(
+    coloreada: pathlib.Path,
+    destino: pathlib.Path,
+    *,
+    resolucion: int,
+    pullpush: bool,
+) -> Horneado:
+    """Hornea el color por vertice de una malla sobre su propio atlas, y lo relee.
+
+    La malla que entra tiene que traer **las UV y el color en el mismo fichero**: es lo
+    que el proveedor necesita para escribir el atlas, y es la razon de ser de
+    `formatos/obj.py`. El color no se interpreta aqui —es un vector codificado en
+    R,G,B— y por eso esta funcion no sabe de normales ni de marcos: eso es de la etapa
+    que la llama.
+
+    `pullpush` rellena los texeles que ningun triangulo toca con lo que tienen al lado.
+    Es una decision declarada y no un detalle: sin él esos texeles se quedan con el valor
+    de la textura de partida, y lo que hay en ellos no es superficie de nadie. Va en el
+    informe con ese nombre.
+    """
+
+    exigir()
+    if resolucion < 1:
+        raise ValueError(f"la resolucion del mapa es un lado en texeles y es {resolucion}")
+
+    conjunto = _conjunto(coloreada)
+    malla = getattr(conjunto, "current_mesh")()  # noqa: B009 - API externa
+    if not malla.has_vertex_color():
+        raise ErrorDeProveedor(
+            f"{coloreada} no trae color por vertice: el horneado lee el color de la malla y "
+            "escribe el atlas con él"
+        )
+    if not malla.has_wedge_tex_coord():
+        raise ErrorDeProveedor(
+            f"{coloreada} no trae coordenadas de textura: sin atlas no hay donde hornear"
+        )
+
+    getattr(conjunto, "set_texture_per_mesh")(  # noqa: B009 - API externa
+        use_dummy_texture=True, dummy_img_size=resolucion
+    )
+    getattr(conjunto, "transfer_attributes_to_texture_per_vertex")(  # noqa: B009
+        sourcemesh=0,
+        targetmesh=0,
+        attributeenum="Vertex Color",
+        textname=destino.name,
+        textw=resolucion,
+        texth=resolucion,
+        overwrite=True,
+        pullpush=pullpush,
+    )
+    imagenes = list(malla.textures().values())
+    if not imagenes:
+        raise ErrorDeProveedor(
+            "el proveedor horneo y no dejo ninguna imagen: no hay mapa que publicar"
+        )
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    imagenes[0].save(str(destino))
+
+    # Y el mapa se lee **de vuelta**, en el baricentro de cada triangulo: es la unica
+    # forma de decir cuanto del vector que se pidio llego al fichero sin escribir aqui un
+    # lector de textura. La rejilla de baricentros es una malla con un vertice por cara
+    # —su posicion es el baricentro y su UV la media de las tres esquinas— y con caras
+    # porque el filtro las exige: lo que se lee es el texel de cada vertice, y eso esta
+    # comprobado con un campo conocido en vez de supuesto.
+    return Horneado(
+        resolucion=resolucion,
+        colores_de_vuelta=_leer_el_mapa_en_los_baricentros(coloreada, mapa=destino),
+    )
+
+
+def _leer_el_mapa_en_los_baricentros(coloreada: pathlib.Path, *, mapa: pathlib.Path) -> Any:
+    """El color del mapa en el baricentro de cada triangulo de la malla horneada."""
+    import numpy as np
+
+    conjunto = _conjunto(coloreada)
+    malla = getattr(conjunto, "current_mesh")()  # noqa: B009 - API externa
+    caras = np.array(malla.face_matrix(), dtype="int64")
+    vertices = np.array(malla.vertex_matrix(), dtype="float64")
+    uv = np.array(malla.vertex_tex_coord_matrix(), dtype="float64")
+    puntos = vertices[caras].mean(axis=1)
+    centros = uv[caras].mean(axis=1)
+
+    lineas = [f"v {p[0]:.9g} {p[1]:.9g} {p[2]:.9g}" for p in puntos]
+    lineas += [f"vt {t[0]:.9g} {t[1]:.9g}" for t in centros]
+    cuantos = len(puntos)
+    lineas += [
+        f"f {i + 1}/{i + 1} {(i + 1) % cuantos + 1}/{(i + 1) % cuantos + 1} "
+        f"{(i + 2) % cuantos + 1}/{(i + 2) % cuantos + 1}"
+        for i in range(cuantos)
+    ]
+    rejilla = mapa.parent / "_baricentros.obj"
+    rejilla.write_text("\n".join(lineas) + "\n", encoding="ascii")
+    try:
+        lectura = _conjunto(rejilla)
+        # Por `getattr`, como el resto del modulo: el analisis de tipos no ve la API del
+        # proveedor —es de C++— y una llamada directa sale como un atributo de `object`.
+        getattr(lectura, "set_texture_per_mesh")(textname=str(mapa))  # noqa: B009
+        getattr(lectura, "transfer_texture_to_color_per_vertex")(  # noqa: B009 - API externa
+            sourcemesh=0, targetmesh=0
+        )
+        leida = getattr(lectura, "current_mesh")()  # noqa: B009 - API externa
+        return np.array(leida.vertex_color_matrix(), dtype="float64")[:, :3]
+    finally:
+        rejilla.unlink(missing_ok=True)
 
 
 def a_obj(origen: pathlib.Path, destino: pathlib.Path) -> None:

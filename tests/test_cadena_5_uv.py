@@ -338,6 +338,25 @@ def test_sin_el_juez_la_etapa_produce_y_declara_que_no_se_pudo_juzgar(
 # --- determinismo, caducidad y la orden ---------------------------------------
 
 
+def test_con_lo_producido_borrado_no_se_devuelve_lo_que_no_esta(
+    tmp_path: pathlib.Path,
+) -> None:
+    """El registro dice si la entrada cambió; no dice si lo que produjo sigue en su sitio.
+
+    Un atlas borrado con el registro intacto daba un «ya está hecho» que devolvía el
+    informe de una etapa cuyo GLB no estaba, y la etapa siguiente salía a leer un
+    fichero que no existe. Lo que hay en disco se comprueba antes de creerse el registro.
+    """
+    proyecto = _proyecto_limpio(tmp_path, _cubo())
+    cortar_y_empaquetar(proyecto)
+    assert _situacion(proyecto, ETAPA) == "HECHA"
+
+    (proyecto / "etapas" / ETAPA / GLB).unlink()
+    informe = cortar_y_empaquetar(proyecto)
+    assert informe.is_file()
+    assert (informe.parent / GLB).is_file(), "el atlas se rehace, no se cita de memoria"
+
+
 def test_la_misma_entrada_da_el_mismo_atlas(tmp_path: pathlib.Path) -> None:
     """Lo que justifica declarar la etapa `DETERMINISTA` y poder saltársela.
 

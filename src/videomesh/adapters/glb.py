@@ -65,9 +65,20 @@ def _documento(
     vistas: Sequence[tuple[int, int, int]],
     minimo: Sequence[float],
     maximo: Sequence[float],
+    con_normales: bool = False,
 ) -> dict[str, Any]:
-    """El bloque JSON del GLB. Una pieza, un primitivo, dos atributos."""
+    """El bloque JSON del GLB. Una pieza, un primitivo, y la normal cuando la hay.
+
+    `NORMAL` no es decorativa: un mapa de normales horneado se lee **contra la normal
+    de la malla**. Si la pieza no la trae, el visor se la inventa —plana o suavizada a
+    su manera— y el relieve sale desplazado sin que nada lo diga. Por eso la etapa que
+    hornea la escribe, y la escribe con la misma normal con la que construyo el marco.
+    """
     indice_vertices, indice_uv, indice_caras = 0, 1, 2
+    indice_normales = 3
+    atributos: dict[str, int] = {"POSITION": indice_vertices, "TEXCOORD_0": indice_uv}
+    if con_normales:
+        atributos["NORMAL"] = indice_normales
     return {
         "asset": {"version": "2.0", "generator": "videomesh"},
         "scene": 0,
@@ -78,7 +89,7 @@ def _documento(
                 "name": nombre,
                 "primitives": [
                     {
-                        "attributes": {"POSITION": indice_vertices, "TEXCOORD_0": indice_uv},
+                        "attributes": atributos,
                         "indices": indice_caras,
                         "mode": 4,
                     }
@@ -103,6 +114,11 @@ def _documento(
                 "count": triangulos * 3,
                 "type": "SCALAR",
             },
+            *(
+                [{"bufferView": 3, "componentType": _FLOTANTE, "count": vertices, "type": "VEC3"}]
+                if con_normales
+                else []
+            ),
         ],
         "bufferViews": [
             {"buffer": 0, "byteOffset": desplazamiento, "byteLength": largo, "target": destino}
@@ -118,9 +134,10 @@ def escribir_glb(
     vertices: Sequence[Sequence[float]],
     triangulos: Sequence[Sequence[int]],
     uv: Sequence[Sequence[float]],
+    normales: Sequence[Sequence[float]] | None = None,
     nombre: str = "pieza",
 ) -> None:
-    """Escribe una pieza con posiciones, triangulos y coordenadas de textura.
+    """Escribe una pieza con posiciones, triangulos, coordenadas de textura y normales.
 
     Las tres listas tienen que ser coherentes entre si, y se comprueba **aqui**:
     un indice fuera de rango o una UV de menos produce un fichero que el vecino lee
@@ -145,14 +162,23 @@ def escribir_glb(
             f"un triangulo usa el vertice {int(caras.max())} y hay {len(posiciones)}: "
             "un indice fuera de rango no es un fichero que se pueda leer"
         )
+    vectores = None if normales is None else np.asarray(normales, dtype="<f4").reshape(-1, 3)
+    if vectores is not None and len(vectores) != len(posiciones):
+        raise ValueError(
+            f"hay {len(posiciones)} vertices y {len(vectores)} normales: la normal es un atributo "
+            "por vertice y sin ella el mapa no se puede leer"
+        )
 
     crudo = bytearray()
     vistas: list[tuple[int, int, int]] = []
-    for datos, destino_de_la_vista in (
+    arreglos = [
         (posiciones, _ARREGLO_DE_ATRIBUTOS),
         (texturas, _ARREGLO_DE_ATRIBUTOS),
         (caras, _ARREGLO_DE_INDICES),
-    ):
+    ]
+    if vectores is not None:
+        arreglos.append((vectores, _ARREGLO_DE_ATRIBUTOS))
+    for datos, destino_de_la_vista in arreglos:
         _acolchar(crudo, 0)
         desplazamiento = len(crudo)
         contenido = datos.tobytes()
@@ -166,6 +192,7 @@ def escribir_glb(
         vistas=vistas,
         minimo=[float(x) for x in posiciones.min(axis=0)],
         maximo=[float(x) for x in posiciones.max(axis=0)],
+        con_normales=vectores is not None,
     )
 
     texto = bytearray(json.dumps(documento, separators=(",", ":")).encode("utf-8"))

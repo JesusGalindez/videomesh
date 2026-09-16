@@ -51,6 +51,7 @@ from videomesh.project.informe import (
     describir_malla,
     directorio_de_etapa,
     escribir_informe,
+    leer_informe,
     malla_de_la_etapa,
     salida_de,
 )
@@ -257,7 +258,13 @@ def cortar_y_empaquetar(
     assert huella is not None
 
     anterior = ultima_de(ruta, ETAPA)
-    if not hay_que_reejecutar(anterior, hash_de_entrada=huella):
+    # El registro dice si la entrada cambio; **no** dice si lo que produjo sigue en su
+    # sitio. Un atlas borrado con el registro intacto daba un «ya esta hecho» que devolvia
+    # una ruta que no existe, y la etapa siguiente se ponia a leer un fichero que no esta.
+    falta_lo_producido = (
+        leer_informe(ruta, ETAPA) is None or not (directorio_de_etapa(ruta, ETAPA) / GLB).is_file()
+    )
+    if not falta_lo_producido and not hay_que_reejecutar(anterior, hash_de_entrada=huella):
         assert anterior is not None and anterior.hash_de_salida is not None
         registrar_stage(
             ruta,
