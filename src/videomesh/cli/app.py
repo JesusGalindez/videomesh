@@ -28,7 +28,7 @@ from collections.abc import Callable, Sequence
 from typing import Any
 
 from videomesh.adapters import xatlas
-from videomesh.application import normales, retopologia, textura, uv
+from videomesh.application import material, normales, retopologia, textura, uv
 from videomesh.application.cadena import estado_de_la_cadena
 from videomesh.application.decimado import decimar
 from videomesh.application.densa import importar_paquete
@@ -85,6 +85,9 @@ La cadena de produccion:
   videomesh normales <ruta> [--resolucion <texeles>] [--sin-relleno]
                               hornea la normal de la malla medida sobre el atlas,
                               y publica el angulo que costo y el juicio del vecino
+  videomesh material <ruta>
+                              declara el material que ata la pieza y sus mapas, y
+                              publica el veredicto del vecino sobre el asset vestido
   videomesh textura <ruta>
                               proyecta los fotogramas sobre la malla. Hoy no se
                               puede: falta TextureMesh de OpenMVS, y no se sustituye
@@ -342,6 +345,24 @@ def _retopologia(argumentos: Sequence[str]) -> int:
     return 1
 
 
+def _material(argumentos: Sequence[str]) -> int:
+    """Declara el material y **ensena el veredicto del vecino** sobre el asset vestido."""
+    if not argumentos:
+        print("uso: videomesh material <ruta>")
+        return 1
+    informe = material.vestir(pathlib.Path(argumentos[0]))
+    documento: dict[str, Any] = json.loads(informe.read_text(encoding="utf-8"))
+    declarado = documento["medidas"]["material"]
+    canales = ", ".join(f"{canal} -> {fichero}" for canal, fichero in declarado["textures"].items())
+    print(
+        f"material: {declarado['id']} · pinta maestra · {canales} · "
+        f"wrap {declarado['wrap']} · {declarado['alphaMode']}"
+    )
+    _resumen_del_juicio(documento["veredicto_del_vecino"])
+    print(f"  informe: {informe}")
+    return 0
+
+
 def _textura(argumentos: Sequence[str]) -> int:
     """La etapa que hoy no se puede hacer, y lo dice con sus tres partes.
 
@@ -527,6 +548,7 @@ _ORDENES: dict[str, Callable[[Sequence[str]], int]] = {
     "retopologia": _retopologia,
     "uv": _uv,
     "normales": _normales,
+    "material": _material,
     "textura": _textura,
 }
 

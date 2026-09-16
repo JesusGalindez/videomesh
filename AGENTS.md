@@ -112,6 +112,7 @@ Vuelven a generar lo que este repositorio publica: `scripts/agents_md.py` · `sc
 | `test_cadena_5_uv.py` | Encargo 04, C2 — el atlas de UV, y el juez que lo juzga. |
 | `test_cadena_6_normales.py` | Encargo 04, D2 — el mapa de normales, y el juez que dice si lo es. |
 | `test_cadena_7_textura.py` | Encargo 04, D1 — la textura, **declarada sin instrumento** y no sustituida. |
+| `test_cadena_8_material.py` | Encargo 04, D3 — el material declarado, con sus mapas y su caso rojo. |
 | `test_contrato_no_ha_derivado.py` | La tabla de obligaciones declara contra que contrato se escribio. Aqui se comprueba. |
 | `test_d1_cube_v1.py` | D1 — V3: el `cube-v1` de VideoMesh, consumido por SoftSight de verdad. |
 | `test_d1_imagenes.py` | D1, segunda pieza — las imagenes son evidencia, no relleno. |

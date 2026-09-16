@@ -9,6 +9,7 @@ decimado     colapso de aristas hasta un objetivo, con la distancia publicada
 retopologia  triangulos desordenados -> quads alineados      sin instrumento hoy
 uv           corte y empaquetado del atlas, con el juicio del vecino
 normales     el detalle que el decimado quito, de vuelta como mapa
+material     declara el material que ata la pieza y sus mapas
 textura      los fotogramas reales proyectados sobre la malla   sin instrumento hoy
 ```
 
@@ -49,7 +50,15 @@ from enum import Enum
 from typing import Any
 
 from videomesh.adapters import xatlas
-from videomesh.application import decimado, limpieza, normales, retopologia, textura, uv
+from videomesh.application import (
+    decimado,
+    limpieza,
+    material,
+    normales,
+    retopologia,
+    textura,
+    uv,
+)
 from videomesh.application.densa import ETAPA as DENSA
 from videomesh.application.densa import digest_de_entrada as digest_de_la_densa
 from videomesh.application.densa import manifest_de
@@ -93,6 +102,7 @@ CADENA: tuple[str, ...] = (
     retopologia.ETAPA,
     uv.ETAPA,
     normales.ETAPA,
+    material.ETAPA,
     textura.ETAPA,
 )
 
@@ -115,9 +125,10 @@ _DEPENDE_DE: dict[str, tuple[str, ...]] = {
     # describiria una superficie que ya no es la suya, asi que depende del atlas y no
     # de la malla. Es la misma razon por la que su hash de entrada lleva los dos.
     normales.ETAPA: (uv.ETAPA,),
-    # D1 proyecta los fotogramas sobre la pieza con atlas y mapa. Cuando el
-    # instrumento llegue, su entrada sera esta y no otra.
-    textura.ETAPA: (normales.ETAPA,),
+    # D1 proyecta los fotogramas sobre la pieza vestida: el material declara a
+    # quien pinta, y la textura proyectada tendra que declararlo en su sitio.
+    material.ETAPA: (normales.ETAPA,),
+    textura.ETAPA: (material.ETAPA,),
 }
 
 #: Las etapas cuyo proveedor puede no estar, con la funcion que lo comprueba. Es una
@@ -146,6 +157,7 @@ DEFECTOS_POR_DEFECTO: dict[str, dict[str, Any]] = {
         "destino": uv.DESTINO_POR_DEFECTO,
         "reposo": "vecino mas cercano sobre la malla medida",
     },
+    material.ETAPA: {"destino": material.PRESET_POR_DEFECTO},
     textura.ETAPA: {},
 }
 
@@ -165,9 +177,13 @@ _MOTIVOS: dict[str, tuple[str, str]] = {
         "no se ha horneado ningun mapa de normales todavia",
         "ya no hay malla con atlas sobre la que hornear",
     ),
+    material.ETAPA: (
+        "no se ha declarado ningun material todavia",
+        "ya no hay pieza con mapa que vestir",
+    ),
     textura.ETAPA: (
         "no se ha proyectado ningun fotograma todavia",
-        "ya no hay pieza con atlas sobre la que proyectar",
+        "ya no hay material sobre el que proyectar",
     ),
 }
 
@@ -188,6 +204,8 @@ def _digest_de(proyecto: pathlib.Path, etapa: str, parametros: Mapping[str, Any]
         return uv.digest_de_la_entrada(proyecto, parametros=dict(parametros))
     if etapa == normales.ETAPA:
         return normales.digest_de_la_entrada(proyecto, parametros=dict(parametros))
+    if etapa == material.ETAPA:
+        return material.digest_de_la_entrada(proyecto, parametros=dict(parametros))
     # La retopologia no llega aqui: sin proveedor no hay ejecucion que comparar, y
     # `_paso` la declara antes de preguntar por su hash.
     return None
