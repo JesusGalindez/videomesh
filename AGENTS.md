@@ -117,6 +117,7 @@ Vuelven a generar lo que este repositorio publica: `scripts/agents_md.py` · `sc
 | `test_f2_stages.py` | Core Foundation, segunda pieza — stages, determinismo y resume. |
 | `test_f3_cli.py` | Core Foundation, tercera pieza — la CLI. |
 | `test_f4_doctor_consumidor.py` | `doctor` decía DISPONIBLE de un consumidor que no se puede consumir. |
+| `test_f5_reduccion_determinista.py` | D28: la partición se define por índices, nunca por el número de workers. |
 | `test_puerta_local.py` | La verificación se ejecuta sola, y dice qué falta cuando no puede. |
 <!-- /generado: pruebas -->
 

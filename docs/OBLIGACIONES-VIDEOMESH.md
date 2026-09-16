@@ -119,6 +119,7 @@ sino porque hay una prueba que se pone roja si se incumple.
 | D19 | `test_a2_modelos_generados.py` — distorsión con nombre, del esquema |
 | D21 | `test_a4_artifact_discriminado.py` — los cuatro casos, más el tipo inexistente |
 | D23 | `test_d3_paridad.py` — las tres comparaciones, con las dos mutaciones comprobadas |
+| D28 | `test_f5_reduccion_determinista.py` — la partición no recibe los workers; idéntico bit a bit con 1, 2, 4 y 8; las dos mutaciones cazadas |
 | D29 | `test_c3_sellado.py` — volumen comprobado antes, destino que no se pisa, manifest el último |
 | D30 | `test_a2_modelos_generados.py` — campo desconocido en el núcleo rechazado |
 | D32 | `test_b1_algebra_canonica.py` — los cinco casos del punto conocido y la puerta de un solo sitio |
