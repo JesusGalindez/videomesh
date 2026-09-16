@@ -337,6 +337,57 @@ def decimar(
     return antes, despues
 
 
+def casco_convexo(origen: pathlib.Path, destino: pathlib.Path) -> dict[str, int]:
+    """El casco convexo de la malla, escrito en `destino`, con su cierre medido.
+
+    Es la pieza que SoftSight **se niega a proponer**: calcular un casco es modelar,
+    y en cuanto decide donde va un vertice deja de poder afirmar que sus numeros son
+    exactos. Por eso vive aqui — modelar es del productor — y juzgar la contencion
+    es del vecino.
+
+    El cierre se **comprueba y no se promete**: un casco es cerrado por construccion,
+    pero las medidas topologicas del fichero escrito lo dicen, y `aristas_de_borde`
+    es lo que la contencion del vecino mira antes de negarse a correr.
+    """
+    exigir()
+    conjunto = _conjunto(origen)
+    getattr(conjunto, "generate_convex_hull")()  # noqa: B009 - API externa
+    _escribir(conjunto, destino)
+    medidas = _medidas(_conjunto(destino))
+    return {
+        "vertices": medidas.vertices,
+        "caras": medidas.caras,
+        "cerrado": medidas.aristas_de_borde == 0,
+        "aristas_de_borde": medidas.aristas_de_borde,
+    }
+
+
+def geometria_de(ruta: pathlib.Path) -> tuple[Any, Any]:
+    """Los vértices y las caras de un fichero que el proveedor lee, como arreglos.
+
+    Abre **su propio `MeshSet`**: la vista de `current_mesh()` muere con el conjunto
+    que la produjo — medido en el bloque C, un `MeshSet` sin referencias deja la
+    malla leída con 98 vértices y 0 caras, sin un error. Releer del fichero es la
+    única forma de que lo que se declara sea lo que hay en disco.
+    """
+    import numpy as np
+
+    exigir()
+    # La vista y el conjunto viven en variables locales del mismo alcance: el binding
+    # de pymeshlab devuelve una vista sobre el objeto de C++, y si el `MeshSet` se
+    # recoge antes de copiar los arreglos, la malla sale vacía sin un error.
+    conjunto = _conjunto(ruta)
+    malla = getattr(conjunto, "current_mesh")()  # noqa: B009 - API externa
+    vertices = np.asarray(malla.vertex_matrix(), dtype="float64").reshape(-1, 3)
+    caras = np.asarray(malla.face_matrix(), dtype="int64").reshape(-1, 3)
+    del conjunto, malla
+    if len(caras) == 0:
+        raise ErrorDeProveedor(
+            f"{ruta} se lee sin triangulos: la vista del `MeshSet` se corto antes de tiempo"
+        )
+    return vertices, caras
+
+
 @dataclass(frozen=True)
 class Atlas:
     """La malla con su atlas, tal y como la dejo el cortador de UV.

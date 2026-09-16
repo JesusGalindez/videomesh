@@ -30,9 +30,10 @@ en cada llamada.
 import json
 import pathlib
 from collections.abc import Sequence
+from dataclasses import dataclass
 from typing import Any
 
-__all__ = ["escribir_glb"]
+__all__ = ["Pieza", "escribir_glb", "leer_glb"]
 
 #: La firma del fichero, que son cuatro bytes ASCII: `glTF`.
 _CABECERA = 0x46546C67
@@ -213,3 +214,66 @@ def escribir_glb(
         fichero.write(len(crudo).to_bytes(4, "little"))
         fichero.write(_PIEZA_BIN.to_bytes(4, "little"))
         fichero.write(crudo)
+
+
+@dataclass(frozen=True)
+class Pieza:
+    """Lo que un GLB de esta cadena contiene, releído del fichero.
+
+    Es lo que las etapas que **visten o comprueban** necesitan: los vértices que se
+    escribieron, sus triángulos y sus UV. Un GLB con extensiones o con imágenes no
+    es de este escritor, y la lectura lo dice en vez de adivinar.
+    """
+
+    vertices: Any
+    triangulos: Any
+    uv: Any
+
+
+def leer_glb(ruta: pathlib.Path) -> Pieza:
+    """Relee un GLB escrito por `escribir_glb`: posiciones, triángulos y UV.
+
+    Se lee el JSON del fichero y se reensamblan los arreglos desde el chunk binario,
+    con los tipos que este escritor declara. No es un lector glTF general: es la
+    mitad que falta del escritor, para que una etapa pueda comprobar lo que hay en
+    disco antes de declararlo — copiarlo a mano y declarar otra cosa sería la clase
+    de contradicción que el propio vecino caza.
+    """
+    import numpy as np
+
+    datos = ruta.read_bytes()
+    if datos[:4] != _CABECERA.to_bytes(4, "little"):
+        raise ValueError(f"{ruta} no es un GLB: su firma no es `glTF`")
+    largo_json = int.from_bytes(datos[12:16], "little")
+    documento: dict[str, Any] = json.loads(datos[20 : 20 + largo_json])
+    if documento.get("extensionsUsed"):
+        raise ValueError(
+            f"{ruta} lleva extensiones y este escritor no las escribe: no es una pieza "
+            "de esta cadena"
+        )
+    # El chunk binario va tras el JSON, alineado a cuatro.
+    inicio_bin = 20 + ((largo_json + 3) & ~3)
+    if datos[inicio_bin + 4 : inicio_bin + 8] != _PIEZA_BIN.to_bytes(4, "little"):
+        raise ValueError(f"{ruta} no lleva chunk binario donde el formato lo pone")
+    largo_bin = int.from_bytes(datos[inicio_bin - 4 : inicio_bin], "little")
+    binario = datos[inicio_bin + 8 : inicio_bin + 8 + largo_bin]
+
+    primitiva = documento["meshes"][0]["primitives"][0]
+    atributos = primitiva["attributes"]
+
+    def _arreglo(accesor_indice: int, forma: int, tipo: int) -> Any:
+        acceso = documento["accessors"][accesor_indice]
+        if acceso["componentType"] != tipo:
+            raise ValueError(
+                f"{ruta}: el accesor {accesor_indice} no es del tipo que este escritor declara"
+            )
+        vista = documento["bufferViews"][acceso["bufferView"]]
+        ancho = {5126: 4, 5125: 4}[tipo] * forma
+        crudo = binario[vista.get("byteOffset", 0) :][: acceso["count"] * ancho]
+        arreglo = np.frombuffer(crudo, dtype="<f4" if tipo == _FLOTANTE else "<u4")
+        return arreglo.reshape(-1, forma)
+
+    posiciones = _arreglo(atributos["POSITION"], 3, _FLOTANTE)
+    uv = _arreglo(atributos["TEXCOORD_0"], 2, _FLOTANTE)
+    triangulos = _arreglo(primitiva["indices"], 3, _ENTERO_SIN_SIGNO)
+    return Pieza(vertices=posiciones, triangulos=triangulos, uv=uv)

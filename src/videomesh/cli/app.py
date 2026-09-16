@@ -28,7 +28,7 @@ from collections.abc import Callable, Sequence
 from typing import Any
 
 from videomesh.adapters import xatlas
-from videomesh.application import material, normales, retopologia, textura, uv
+from videomesh.application import colision, lod, material, normales, retopologia, textura, uv
 from videomesh.application.cadena import estado_de_la_cadena
 from videomesh.application.decimado import decimar
 from videomesh.application.densa import importar_paquete
@@ -85,6 +85,12 @@ La cadena de produccion:
   videomesh normales <ruta> [--resolucion <texeles>] [--sin-relleno]
                               hornea la normal de la malla medida sobre el atlas,
                               y publica el angulo que costo y el juicio del vecino
+  videomesh lod <ruta> --niveles <n1,n2,...>
+                              encadena los niveles, cada uno decimado del anterior,
+                              y publica la distancia de cada paso
+  videomesh colision <ruta>
+                              construye el casco convexo y le pasa la contencion al
+                              vecino, con la holgura declarada en el destino
   videomesh material <ruta>
                               declara el material que ata la pieza y sus mapas, y
                               publica el veredicto del vecino sobre el asset vestido
@@ -363,6 +369,69 @@ def _material(argumentos: Sequence[str]) -> int:
     return 0
 
 
+def _lod(argumentos: Sequence[str]) -> int:
+    """Encadena los niveles y **ensena la cadena**: un nivel por línea."""
+    conocidas = ["--niveles"]
+    analizado = _banderas(argumentos, conocidas)
+    if analizado is None or not analizado[0]:
+        print("uso: videomesh lod <ruta> --niveles <n1,n2,...>")
+        return 1
+    posicionales, valores = analizado
+    bruto = str(valores.get("--niveles", ""))
+    try:
+        niveles = [int(x) for x in bruto.split(",") if x.strip()]
+    except ValueError:
+        print("--niveles tiene que ser una lista de numeros separados por comas")
+        return 1
+    if not niveles:
+        print("falta la cadena de niveles: --niveles <n1,n2,...>")
+        return 1
+
+    informe = lod.encadenar(pathlib.Path(posicionales[0]), niveles=niveles)
+    documento: dict[str, Any] = json.loads(informe.read_text(encoding="utf-8"))
+    medidas = documento["medidas"]
+    for nivel in medidas["niveles"]:
+        falta = nivel["distancia_contra_la_malla_medida"]["falta"]
+        print(
+            f"nivel {nivel['nivel']}: {nivel['entrada']} -> {nivel['triangulos']} tri · "
+            f"contra la medida {falta['maximo']:.3e}"
+        )
+    if medidas["cadena_parada"]:
+        print(f"  cadena parada: {medidas['motivo_de_la_parada']}")
+    print(f"  informe: {informe}")
+    return 0
+
+
+def _colision(argumentos: Sequence[str]) -> int:
+    """Construye el casco y **ensena el veredicto de contencion** del vecino."""
+    if not argumentos:
+        print("uso: videomesh colision <ruta>")
+        return 1
+    informe = colision.construir(
+        pathlib.Path(argumentos[0]),
+        destino={
+            "preset": uv.DESTINO_POR_DEFECTO,
+            "budgets": [],
+            "collisionSlackMax": 0.10,
+            "collisionRequireConvex": True,
+        },
+    )
+    documento: dict[str, Any] = json.loads(informe.read_text(encoding="utf-8"))
+    proxy = documento["medidas"]["proxy"]
+    print(
+        f"colision: casco {proxy['vertices']} v / {proxy['caras']} caras · "
+        f"cerrado {'si' if proxy['cerrado'] else 'NO'}"
+    )
+    _resumen_del_juicio(documento["veredicto_del_vecino"])
+    contencion = documento["veredicto_del_vecino"].get("contencion")
+    if contencion is not None:
+        veredicto_contencion = "PASS" if contencion.get("verdict") == "PASS" else "FAIL"
+        asomo = contencion.get("protrudingRatio", 0) * 100
+        print(f"  contencion                 {veredicto_contencion} · asomo {asomo:.1f} %")
+    print(f"  informe: {informe}")
+    return 0
+
+
 def _textura(argumentos: Sequence[str]) -> int:
     """La etapa que hoy no se puede hacer, y lo dice con sus tres partes.
 
@@ -548,7 +617,9 @@ _ORDENES: dict[str, Callable[[Sequence[str]], int]] = {
     "retopologia": _retopologia,
     "uv": _uv,
     "normales": _normales,
+    "lod": _lod,
     "material": _material,
+    "colision": _colision,
     "textura": _textura,
 }
 

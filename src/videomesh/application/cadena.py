@@ -9,7 +9,9 @@ decimado     colapso de aristas hasta un objetivo, con la distancia publicada
 retopologia  triangulos desordenados -> quads alineados      sin instrumento hoy
 uv           corte y empaquetado del atlas, con el juicio del vecino
 normales     el detalle que el decimado quito, de vuelta como mapa
+lod          la cadena de niveles, cada uno decimado del anterior
 material     declara el material que ata la pieza y sus mapas
+colision     el proxy convexo; su contencion la juzga el vecino
 textura      los fotogramas reales proyectados sobre la malla   sin instrumento hoy
 ```
 
@@ -51,8 +53,10 @@ from typing import Any
 
 from videomesh.adapters import xatlas
 from videomesh.application import (
+    colision,
     decimado,
     limpieza,
+    lod,
     material,
     normales,
     retopologia,
@@ -63,8 +67,8 @@ from videomesh.application.densa import ETAPA as DENSA
 from videomesh.application.densa import digest_de_entrada as digest_de_la_densa
 from videomesh.application.densa import manifest_de
 from videomesh.domain.errores import ErrorDePaquete
-from videomesh.domain.stage import EjecucionDeStage, EstadoDeStage
-from videomesh.project.informe import leer_informe
+from videomesh.domain.stage import EjecucionDeStage, EstadoDeStage, hash_de_entrada
+from videomesh.project.informe import leer_informe, salida_de
 from videomesh.project.procedencia import ultima_de_la_etapa
 from videomesh.project.stages import ultima_de
 
@@ -102,7 +106,9 @@ CADENA: tuple[str, ...] = (
     retopologia.ETAPA,
     uv.ETAPA,
     normales.ETAPA,
+    lod.ETAPA,
     material.ETAPA,
+    colision.ETAPA,
     textura.ETAPA,
 )
 
@@ -128,6 +134,8 @@ _DEPENDE_DE: dict[str, tuple[str, ...]] = {
     # D1 proyecta los fotogramas sobre la pieza vestida: el material declara a
     # quien pinta, y la textura proyectada tendra que declararlo en su sitio.
     material.ETAPA: (normales.ETAPA,),
+    # El proxy sale de la malla de trabajo; el asset lo compara contra la maestra.
+    colision.ETAPA: (normales.ETAPA,),
     textura.ETAPA: (material.ETAPA,),
 }
 
@@ -158,6 +166,7 @@ DEFECTOS_POR_DEFECTO: dict[str, dict[str, Any]] = {
         "reposo": "vecino mas cercano sobre la malla medida",
     },
     material.ETAPA: {"destino": material.PRESET_POR_DEFECTO},
+    colision.ETAPA: {},
     textura.ETAPA: {},
 }
 
@@ -180,6 +189,14 @@ _MOTIVOS: dict[str, tuple[str, str]] = {
     material.ETAPA: (
         "no se ha declarado ningun material todavia",
         "ya no hay pieza con mapa que vestir",
+    ),
+    lod.ETAPA: (
+        "no se ha encadenado ningun nivel todavia",
+        "ya no hay malla de trabajo de la que bajar",
+    ),
+    colision.ETAPA: (
+        "no se ha construido ningun proxy todavia",
+        "ya no hay malla de trabajo de la que sacar el casco",
     ),
     textura.ETAPA: (
         "no se ha proyectado ningun fotograma todavia",
@@ -206,9 +223,50 @@ def _digest_de(proyecto: pathlib.Path, etapa: str, parametros: Mapping[str, Any]
         return normales.digest_de_la_entrada(proyecto, parametros=dict(parametros))
     if etapa == material.ETAPA:
         return material.digest_de_la_entrada(proyecto, parametros=dict(parametros))
+    if etapa == lod.ETAPA:
+        return lod_digest(proyecto, parametros)
+    if etapa == colision.ETAPA:
+        return colision_digest(proyecto, parametros)
     # La retopologia no llega aqui: sin proveedor no hay ejecucion que comparar, y
     # `_paso` la declara antes de preguntar por su hash.
     return None
+
+
+def lod_digest(proyecto: pathlib.Path, parametros: Mapping[str, Any]) -> str | None:
+    """La entrada de la cadena de niveles: la malla que produce el decimado.
+
+    Es su **salida** — el nivel 1 se decima de ella — y no la entrada del decimado:
+    la limpieza cambia lo que entra, y el LOD de la malla limpia seria otro.
+    """
+    salida = salida_de(proyecto, decimado.ETAPA)
+    if salida is None:
+        return None
+    from videomesh.adapters import pymeshlab
+
+    return hash_de_entrada(
+        entradas=[str(salida["sha256"])],
+        parametros=dict(parametros),
+        proveedor=pymeshlab.PROVEEDOR,
+        version_del_proveedor=pymeshlab.version(),
+    )
+
+
+def colision_digest(proyecto: pathlib.Path, parametros: Mapping[str, Any]) -> str | None:
+    """La entrada del proxy: la maestra de `normales`, declarada en su informe."""
+    salida = leer_informe(proyecto, normales.ETAPA)
+    if salida is None:
+        return None
+    maestra = next((s for s in salida.get("salidas", []) if s.get("ruta") == normales.GLB), None)
+    if maestra is None:
+        return None
+    from videomesh.adapters import pymeshlab
+
+    return hash_de_entrada(
+        entradas=[str(maestra["sha256"])],
+        parametros=dict(parametros),
+        proveedor=pymeshlab.PROVEEDOR,
+        version_del_proveedor=pymeshlab.version(),
+    )
 
 
 def _digest_de_la_densa_importada(proyecto: pathlib.Path) -> str | None:
