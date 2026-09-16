@@ -34,6 +34,7 @@ __all__ = [
     "Limpieza",
     "Medidas",
     "a_obj",
+    "comprobar_objetivo",
     "decimar",
     "exigir",
     "instalado",
@@ -266,6 +267,25 @@ def limpiar(origen: pathlib.Path, destino: pathlib.Path, *, minimo_relativo: flo
     )
 
 
+def comprobar_objetivo(antes: int, despues: int, objetivo: int) -> None:
+    """Falla si el decimado se quedo corto. Quedarse corto no es haber decimado.
+
+    El presupuesto de un destino se declara en triangulos. Una etapa que se queda
+    en 2.915 habiendo pedido 800 y sale HECHA deja que el veredicto de produccion
+    se apoye en una cifra que nadie cumplio.
+
+    Recibe los tres numeros **por argumento** y no toca disco: asi se la puede ver
+    en rojo sin una malla que no exista. Una comprobacion que solo sabe mirar el
+    resultado de verdad no se distingue de una que no mira nada.
+    """
+    if despues > objetivo:
+        raise ErrorDeProveedor(
+            f"el proveedor no llego al objetivo: se pidieron {objetivo} triangulos, "
+            f"entraron {antes} y salieron {despues}. La malla puede no ser variedad, "
+            "o el objetivo ser inalcanzable para su topologia"
+        )
+
+
 def decimar(
     origen: pathlib.Path, destino: pathlib.Path, *, objetivo: int
 ) -> tuple[Medidas, Medidas]:
@@ -278,14 +298,29 @@ def decimar(
     if objetivo < 1:
         raise ValueError(f"el objetivo de triangulos tiene que ser al menos 1, y es {objetivo}")
 
+    # Las medidas salen de un `MeshSet` **aparte**, por el mismo motivo que
+    # `_caras_por_componente`: medir es una consulta, y esta no es inocente.
+    # `get_topological_measures` marca los vertices no-variedad que encuentra, y
+    # el colapso de aristas se rinde **en silencio** sobre una malla marcada: ni
+    # excepcion ni aviso, devuelve la misma malla. Medido el 2026-09-15 sobre la
+    # malla que llego de Colab —1481 vertices, 2 vertices no-variedad— y sobre dos
+    # cubos unidos por un vertice: 1536 caras pedidas a 200 salen 200 midiendo
+    # aparte y 1536 midiendo encima.
+    #
+    # Las esferas y los planos de las pruebas son variedad, asi que ahi no pasaba
+    # nada. Una malla de reconstruccion real casi nunca lo es.
+    antes = _medidas(_conjunto(origen))
     conjunto = _conjunto(origen)
-    antes = _medidas(conjunto)
     if antes.caras > objetivo:
         getattr(conjunto, "meshing_decimation_quadric_edge_collapse")(  # noqa: B009
             targetfacenum=objetivo
         )
-    despues = _medidas(conjunto)
     _escribir(conjunto, destino)
+    # Y las de despues, releyendo lo que se escribio: es la malla que la etapa
+    # siguiente va a leer, no la que quedo en memoria.
+    despues = _medidas(_conjunto(destino))
+
+    comprobar_objetivo(antes.caras, despues.caras, objetivo)
     return antes, despues
 
 

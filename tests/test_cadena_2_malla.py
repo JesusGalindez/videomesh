@@ -28,6 +28,7 @@ from typing import Any
 
 import pytest
 
+from videomesh.adapters.pymeshlab import comprobar_objetivo
 from videomesh.application.decimado import decimar
 from videomesh.application.densa import importar_paquete
 from videomesh.application.limpieza import limpiar
@@ -178,6 +179,35 @@ def _proyecto_con_densa(tmp_path: pathlib.Path, malla: Malla) -> pathlib.Path:
         obra.manifest["requiredEvidence"] = ["malla"]
     importar_paquete(proyecto, paquete, maquina="colab-t4")
     return proyecto
+
+
+def _dos_cubos_por_un_vertice(divisiones: int = 8) -> Malla:
+    """Dos cubos soldados por **un solo vertice**: una malla que no es variedad.
+
+    Es la forma mas pequena de reproducir lo que llega de una reconstruccion real.
+    La malla que salio de Colab el 2026-09-15 traia dos vertices no-variedad entre
+    1.481, y con eso bastaba para que el decimado no decimara nada.
+
+    Las esferas y los planos de este fichero son variedad, y por eso las veintiseis
+    pruebas del bloque B pasaban sobre una etapa que sobre datos de verdad era un
+    no-op: pedirle 5.000 triangulos a una malla de 104.868 devolvia 104.408, y la
+    etapa lo daba por hecho.
+    """
+    uno = _cubo(divisiones=divisiones)
+    otro = _cubo(centro=(1.0, 1.0, 1.0), divisiones=divisiones)
+    compartido = (0.5, 0.5, 0.5)
+    aqui = uno.vertices.index(compartido)
+    alli = otro.vertices.index(compartido)
+    tope = len(uno.vertices)
+
+    def soldar(triangulo: tuple[int, int, int]) -> tuple[int, int, int]:
+        a, b, c = (aqui if i == alli else i + tope for i in triangulo)
+        return a, b, c
+
+    return Malla(
+        vertices=[*uno.vertices, *otro.vertices],
+        triangulos=[*uno.triangulos, *(soldar(t) for t in otro.triangulos)],
+    )
 
 
 def _proyecto_limpio(tmp_path: pathlib.Path, malla: Malla) -> pathlib.Path:
@@ -390,6 +420,43 @@ def test_el_decimado_respeta_el_objetivo_de_triangulos(tmp_path: pathlib.Path) -
     medidas = _medidas(proyecto, "decimado")
     assert medidas["triangulos_antes"] > 2000
     assert medidas["triangulos_despues"] <= 2000
+
+
+def test_el_decimado_tambien_decima_una_malla_que_no_es_variedad(
+    tmp_path: pathlib.Path,
+) -> None:
+    """El caso rojo que faltaba, y el unico que se parece a lo que llega de fuera.
+
+    Medir sobre el mismo `MeshSet` que se va a decimar deja el colapso de aristas
+    sin efecto en cuanto la malla tiene un vertice no-variedad: el proveedor no
+    falla, devuelve la misma malla. Sin esta prueba, la etapa aprueba con esferas
+    y no hace nada con una reconstruccion.
+    """
+    proyecto = _proyecto_limpio(tmp_path, _dos_cubos_por_un_vertice())
+
+    decimar(proyecto, objetivo=200)
+
+    medidas = _medidas(proyecto, "decimado")
+    assert medidas["triangulos_antes"] > 200
+    assert medidas["triangulos_despues"] <= 200
+
+
+def test_quedarse_corto_no_es_haber_decimado() -> None:
+    """La comprobacion del objetivo, vista en rojo con numeros inventados.
+
+    Recibe los tres por argumento a proposito. Sobre mallas de verdad el proveedor
+    no se queda corto casi nunca —sobre una variedad baja incluso por debajo de lo
+    pedido—, asi que una comprobacion que solo supiera mirar un resultado real no
+    se podria ver fallar, y no se distinguiria de una que no mira nada.
+    """
+    comprobar_objetivo(2915, 800, 800)  # llego justo: no protesta
+    comprobar_objetivo(2915, 640, 800)  # se paso de largo: tampoco
+
+    with pytest.raises(ErrorDeProveedor, match="no llego al objetivo") as fallo:
+        comprobar_objetivo(2915, 2915, 800)
+    # Los tres numeros en el mensaje: sin ellos hay que ir al informe a saber
+    # cuanto se quedo corto, que es justo lo que uno quiere saber al leerlo.
+    assert "2915" in str(fallo.value) and "800" in str(fallo.value)
 
 
 def test_el_decimado_publica_las_dos_direcciones_sin_promediarlas(
