@@ -18,6 +18,7 @@ __all__ = [
     "MANIFIESTO",
     "TIPO_DE_DOCUMENTO",
     "abrir_proyecto",
+    "comprobar_proyecto",
     "crear_proyecto",
     "guardar_proyecto",
 ]
@@ -38,6 +39,19 @@ def crear_proyecto(ruta: pathlib.Path, *, nombre: str) -> Proyecto:
     proyecto = Proyecto(nombre=nombre, estado=CicloDeVida.CREADO)
     guardar_proyecto(ruta, proyecto)
     return proyecto
+
+
+def comprobar_proyecto(ruta: pathlib.Path) -> pathlib.Path:
+    """Devuelve la ruta si ahí hay un proyecto, o dice por que no lo hay.
+
+    Vive aqui y no en cada fichero del proyecto porque la pregunta —«esto es un
+    proyecto?»— la contesta quien sabe que `MANIFIESTO` es la respuesta, y cuatro
+    copias de la misma comprobacion divergen en la primera que se relaje.
+    """
+    camino = pathlib.Path(ruta)
+    if not (camino / MANIFIESTO).is_file():
+        raise ErrorDeProyecto(f"en {camino} no hay ningun {MANIFIESTO}: no es un proyecto")
+    return camino
 
 
 def guardar_proyecto(ruta: pathlib.Path, proyecto: Proyecto) -> None:

@@ -2,8 +2,8 @@
 
 VideoMesh escribe paquetes de reconstruccion; **SoftSight los consume y los rechaza si
 estan mal**. No se escribe contra una especificacion: se escribe contra un programa que
-corre en esta maquina. Esto es lo que hay que saber antes del primer comando; corto a
-proposito —el techo son 120 lineas y una prueba lo comprueba— y lo demas son punteros.
+corre en esta maquina. Esto es lo que hay que saber antes del primer comando; cortoa proposito —el techo vive en `scripts/agents_md.py` y no se copia aqui, porque dos
+sitios con el mismo numero divergen— y lo demas son punteros.
 
 ## Lo primero
 
@@ -105,6 +105,7 @@ Vuelven a generar lo que este repositorio publica: `scripts/agents_md.py` · `sc
 | `test_b4_escala.py` | B4 — D9: un presupuesto en unidades absolutas sobre una escala que no lo es se rechaza. |
 | `test_c1_c2_integridad.py` | C1 y C2 — V6, V8 y D7: identidad del paquete e integridad de cada artifact. |
 | `test_c3_sellado.py` | C3 — V5, V7 y D29: el paquete se publica entero o no se publica. |
+| `test_cadena_1_import.py` | Encargo 04, bloque A — el paquete que llega de Colab. |
 | `test_contrato_no_ha_derivado.py` | La tabla de obligaciones declara contra que contrato se escribio. Aqui se comprueba. |
 | `test_d1_cube_v1.py` | D1 — V3: el `cube-v1` de VideoMesh, consumido por SoftSight de verdad. |
 | `test_d1_imagenes.py` | D1, segunda pieza — las imagenes son evidencia, no relleno. |

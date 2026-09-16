@@ -9,9 +9,10 @@ import sys
 
 from videomesh.contracts.agentes import AGENTS, agents_md_generado
 
-# Con margen para las pruebas que faltan del encargo 01: hoy son 10 ficheros y
-# el bloque generado crece una linea por cada uno.
-TECHO = 150
+# El bloque generado crece una linea por fichero de prueba, asi que el techo es un
+# recordatorio y no una promesa: el encargo 04 anade un fichero por bloque —seis—
+# y el techo sube una vez y con motivo, no cada vez que molesta.
+TECHO = 160
 
 
 def main(argumentos: list[str]) -> int:

@@ -25,7 +25,11 @@ __all__ = [
     "ErrorDeProveedor",
     "ErrorDeProyecto",
     "ErrorDeVideoMesh",
+    "ManifestNoValido",
+    "PaqueteSinSellar",
+    "ProcedenciaIncompleta",
     "ProveedorNoDisponible",
+    "SinSuperficie",
 ]
 
 
@@ -55,6 +59,32 @@ class ProveedorNoDisponible(ErrorDeProveedor):
 
 class CapacidadDeComputoAusente(ErrorDeProveedor):
     """Falta la máquina, no el programa: una GPU, memoria, un sistema operativo."""
+
+
+class ManifestNoValido(ErrorDePaquete, ValueError):
+    """El manifest de un paquete de fuera no valida contra el esquema publicado.
+
+    Es de la frontera y no del formato: el paquete se lee con los modelos que D15
+    genera del esquema, asi que un campo que SoftSight no conoce no lo rechaza
+    aqui una regla propia — lo rechaza el mismo esquema que lo escribio.
+    """
+
+
+class PaqueteSinSellar(ErrorDePaquete, ValueError):
+    """El paquete esta `WRITING`: todavia se esta escribiendo y no se consume (D29)."""
+
+
+class SinSuperficie(ErrorDePaquete, ValueError):
+    """El paquete no trae ninguna `TRIANGLE_MESH`, asi que no hay nada que limpiar."""
+
+
+class ProcedenciaIncompleta(ErrorDePaquete, ValueError):
+    """Falta un dato de procedencia, y sin el la medida no se puede interpretar.
+
+    No es un campo opcional que se deja vacio: de que maquina y con que version
+    salio una densa decide si dos densas son comparables, y dentro de seis meses
+    nadie se acordara de ninguna de las dos cosas.
+    """
 
 
 class CapacidadNoSoportada(ErrorDeVideoMesh):

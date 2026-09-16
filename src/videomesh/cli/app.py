@@ -1,7 +1,8 @@
 """La línea de órdenes de VideoMesh — §20 del roadmap.
 
 Cuatro órdenes de Core Foundation —crear un proyecto, mirar en qué estado está,
-saber si el entorno sirve, y qué habría que rehacer— más el pipeline entero.
+saber si el entorno sirve, y qué habría que rehacer— más el pipeline entero, y la
+puerta por la que entra la malla densa que se hace en Colab.
 
 De los cuatro stages **hoy solo `produce` puede trabajar**: FFmpeg y COLMAP no
 están en esta máquina. Los otros tres existen igual, y esto es un cambio de
@@ -22,6 +23,8 @@ import subprocess
 import sys
 from collections.abc import Callable, Sequence
 
+from videomesh.application.cadena import estado_de_la_cadena
+from videomesh.application.densa import importar_paquete
 from videomesh.application.pipeline import PAQUETES, STAGES, ejecutar_stage, hash_de_entrada
 from videomesh.cli.doctor import informe_de_doctor
 from videomesh.contracts.generacion import ESQUEMAS
@@ -29,6 +32,7 @@ from videomesh.contracts.serialization import volcar_json
 from videomesh.domain.errores import ErrorDeVideoMesh
 from videomesh.domain.project import preparacion_de
 from videomesh.domain.stage import hay_que_reejecutar
+from videomesh.project.procedencia import ultima_de_la_etapa
 from videomesh.project.stages import historial_de
 from videomesh.project.store import abrir_proyecto, crear_proyecto
 
@@ -50,7 +54,15 @@ El pipeline:
   videomesh validate <ruta>   pasa el paquete por el consumidor de SoftSight
 
 Los tres primeros fallan diciendo que les falta: `videomesh doctor` lo dice todo
-de una vez. La frontera manda sobre lo demas: docs/contrato-videomesh.md.
+de una vez.
+
+La cadena de produccion:
+
+  videomesh import <ruta> <paquete> [--maquina <nombre>]
+                              registra el paquete que llega de Colab como la
+                              etapa densa, comprobando su integridad
+
+La frontera con SoftSight manda sobre todo lo demas: docs/contrato-videomesh.md.
 """
 
 
@@ -79,6 +91,11 @@ def _status(argumentos: Sequence[str]) -> int:
     )
     historial = historial_de(ruta)
     print(f"stages      {len(historial)} ejecuciones registradas")
+    # La cadena, etapa a etapa: que esta hecho, que caduco y que toca. Un stage
+    # COMPLETE cuya entrada cambio no esta hecho, esta caducado, y `status` es
+    # donde alguien se entera de eso.
+    for paso in estado_de_la_cadena(ruta):
+        print(f"  {paso.etapa:<11} {paso.situacion.value:<9} {paso.motivo}")
     return 0
 
 
@@ -180,6 +197,40 @@ def _validate(argumentos: Sequence[str]) -> int:
     return 0
 
 
+def _import(argumentos: Sequence[str]) -> int:
+    """Registra un paquete producido fuera como la salida de la etapa `densa`.
+
+    No lo reejecuta: lo comprueba. La densa exige CUDA y llega de Colab, asi que
+    lo unico que este lado puede hacer con ella es negarse a creersela sin mirar.
+    """
+    posicionales: list[str] = []
+    maquina: str | None = None
+    indice = 0
+    while indice < len(argumentos):
+        actual = argumentos[indice]
+        if actual == "--maquina":
+            if indice + 1 >= len(argumentos):
+                print("falta el nombre de la maquina: --maquina <nombre>")
+                return 1
+            maquina = argumentos[indice + 1]
+            indice += 2
+            continue
+        posicionales.append(actual)
+        indice += 1
+
+    if len(posicionales) < 2:
+        print("uso: videomesh import <proyecto> <paquete> [--maquina <nombre>]")
+        return 1
+
+    ruta = pathlib.Path(posicionales[0])
+    informe = importar_paquete(ruta, pathlib.Path(posicionales[1]), maquina=maquina)
+    anotada = ultima_de_la_etapa(ruta, "densa")
+    assert anotada is not None  # lo acaba de anotar el import
+    print(f"densa: {anotada.package_id} importada de {anotada.maquina}")
+    print(f"  informe: {informe}")
+    return 0
+
+
 _ORDENES: dict[str, Callable[[Sequence[str]], int]] = {
     "init": _init,
     "status": _status,
@@ -187,6 +238,7 @@ _ORDENES: dict[str, Callable[[Sequence[str]], int]] = {
     "resume": _resume,
     "validate": _validate,
     **{nombre: _stage(nombre) for nombre in STAGES},
+    "import": _import,
 }
 
 

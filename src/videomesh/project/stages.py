@@ -10,25 +10,17 @@ import pathlib
 from typing import Any
 
 from videomesh.contracts.serialization import volcar_json
-from videomesh.domain.errores import ErrorDeProyecto
 from videomesh.domain.stage import Determinismo, EjecucionDeStage, EstadoDeStage
-from videomesh.project.store import MANIFIESTO
+from videomesh.project.store import comprobar_proyecto
 
 __all__ = ["HISTORIAL", "historial_de", "registrar_stage", "ultima_de"]
 
 HISTORIAL = "stages.jsonl"
 
 
-def _comprobar(proyecto: pathlib.Path) -> pathlib.Path:
-    ruta = pathlib.Path(proyecto)
-    if not (ruta / MANIFIESTO).is_file():
-        raise ErrorDeProyecto(f"en {ruta} no hay ningun {MANIFIESTO}: no es un proyecto")
-    return ruta
-
-
 def registrar_stage(proyecto: pathlib.Path, ejecucion: EjecucionDeStage) -> None:
     """Añade una ejecución al historial. Una línea por ejecución, en orden."""
-    ruta = _comprobar(proyecto)
+    ruta = comprobar_proyecto(proyecto)
     fila: dict[str, Any] = {
         "stage": ejecucion.stage,
         "estado": ejecucion.estado.value,
@@ -46,7 +38,7 @@ def registrar_stage(proyecto: pathlib.Path, ejecucion: EjecucionDeStage) -> None
 
 def historial_de(proyecto: pathlib.Path) -> list[EjecucionDeStage]:
     """Todas las ejecuciones registradas, en el orden en que pasaron."""
-    ruta = _comprobar(proyecto)
+    ruta = comprobar_proyecto(proyecto)
     fichero = ruta / HISTORIAL
     if not fichero.is_file():
         return []
