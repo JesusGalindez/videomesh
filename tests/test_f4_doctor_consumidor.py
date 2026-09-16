@@ -15,7 +15,11 @@ hizo, porque una prueba que solo se ha visto verde no ha demostrado que mire.
 
 import pathlib
 
-from videomesh.cli.doctor import importes_sin_resolver, informe_de_doctor
+from videomesh.cli.doctor import (
+    comprobar_paquete_de_referencia,
+    importes_sin_resolver,
+    informe_de_doctor,
+)
 from videomesh.contracts.generacion import ESQUEMAS
 
 CONSUMIDOR = ESQUEMAS.parent / "tools" / "reconstruction.mjs"
@@ -54,3 +58,32 @@ def test_el_informe_bloquea_si_el_consumidor_no_se_puede_consumir() -> None:
     fila = next(c for c in informe["comprobaciones"] if c["que"] == "SoftSight, consumidor")
     assert fila["bloquea"] is True
     assert fila["estado"] == "DISPONIBLE"
+
+
+# --- el paquete de referencia ----------------------------------------------
+
+
+def test_el_paquete_de_referencia_tiene_su_propia_fila() -> None:
+    """`artifacts/cube-v1/` tampoco viaja: lo escribe `npm run cube-v1` y el
+    `.gitignore` de SoftSight lo excluye porque el generador es determinista.
+
+    Seis ficheros de prueba abren su manifest **en tiempo de importacion**, asi
+    que sin el la suite no arranca —«5 errors during collection», medido en la
+    primera ejecucion del workflow—. Y `doctor` paso en verde esa misma
+    ejecucion: miraba `dist-node` y no sabia nada de este.
+    """
+    informe = informe_de_doctor()
+    fila = next(
+        c for c in informe["comprobaciones"] if c["que"] == "SoftSight, paquete de referencia"
+    )
+    assert fila["bloquea"] is True
+    assert fila["estado"] == "DISPONIBLE"
+
+
+def test_sin_el_paquete_la_fila_dice_con_que_orden_se_escribe(tmp_path: pathlib.Path) -> None:
+    """El caso rojo sin mover nada. Quien lee la linea no tiene por que saber
+    que `artifacts/cube-v1/` se genera ni con que."""
+    fila = comprobar_paquete_de_referencia(tmp_path / "manifest.json")
+    assert fila.estado == "SIN CONSTRUIR"
+    assert "npm run cube-v1" in fila.detalle
+    assert fila.bloquea is True

@@ -28,7 +28,12 @@ from videomesh.contracts.estado import (
 )
 from videomesh.contracts.generacion import ESQUEMAS
 
-__all__ = ["Comprobacion", "importes_sin_resolver", "informe_de_doctor"]
+__all__ = [
+    "Comprobacion",
+    "comprobar_paquete_de_referencia",
+    "importes_sin_resolver",
+    "informe_de_doctor",
+]
 
 #: Un `from "..."` de un módulo ES. Solo interesan los **relativos**: `node:fs` y
 #: los paquetes no son ficheros del repositorio, y buscarlos en disco daría un
@@ -99,8 +104,37 @@ def _consumidor() -> Comprobacion:
     return Comprobacion("SoftSight, consumidor", "DISPONIBLE", str(consumidor), True)
 
 
+def comprobar_paquete_de_referencia(manifest: pathlib.Path) -> Comprobacion:
+    """El paquete `cube-v1` de SoftSight, que es de dónde se lee qué forma tiene
+    un paquete de verdad.
+
+    Tampoco viaja: lo escribe `npm run cube-v1` y el `.gitignore` de SoftSight lo
+    excluye porque el generador es determinista y commitearlo sería un segundo
+    original. Seis ficheros de prueba lo abren **en tiempo de importación**, así
+    que sin él la suite no arranca — y la primera ejecución del workflow lo
+    demostró con `doctor` en verde delante.
+
+    Recibe la ruta como argumento por lo de siempre: para que el caso rojo se
+    pueda escribir sin mover el directorio de sitio.
+    """
+    if manifest.is_file():
+        return Comprobacion("SoftSight, paquete de referencia", "DISPONIBLE", str(manifest), True)
+    return Comprobacion(
+        "SoftSight, paquete de referencia",
+        "SIN CONSTRUIR",
+        f"falta {manifest}; se escribe con `npm run cube-v1` en ../Dron/softsight. "
+        "Sin el, seis ficheros de prueba no llegan ni a importarse",
+        True,
+    )
+
+
 def _softsight() -> list[Comprobacion]:
-    filas = [_consumidor()]
+    filas = [
+        _consumidor(),
+        comprobar_paquete_de_referencia(
+            ESQUEMAS.parent / "artifacts" / "cube-v1" / "manifest.json"
+        ),
+    ]
 
     registro = ESQUEMAS / "registry.json"
     if not registro.is_file():
