@@ -28,7 +28,17 @@ from collections.abc import Callable, Sequence
 from typing import Any
 
 from videomesh.adapters import xatlas
-from videomesh.application import colision, lod, material, normales, retopologia, textura, uv
+from videomesh.application import (
+    colision,
+    glb_final,
+    lod,
+    material,
+    normales,
+    perfiles,
+    retopologia,
+    textura,
+    uv,
+)
 from videomesh.application.cadena import estado_de_la_cadena
 from videomesh.application.decimado import decimar
 from videomesh.application.densa import importar_paquete
@@ -94,6 +104,10 @@ La cadena de produccion:
   videomesh material <ruta>
                               declara el material que ata la pieza y sus mapas, y
                               publica el veredicto del vecino sobre el asset vestido
+  videomesh glb <ruta> [--destino <perfil>]
+                              empaqueta el asset final con meshoptimizer y KTX2, en
+                              dos variantes, y publica el veredicto del vecino sobre
+                              la que su cargador puede leer
   videomesh textura <ruta>
                               proyecta los fotogramas sobre la malla. Hoy no se
                               puede: falta TextureMesh de OpenMVS, y no se sustituye
@@ -369,6 +383,34 @@ def _material(argumentos: Sequence[str]) -> int:
     return 0
 
 
+def _glb(argumentos: Sequence[str]) -> int:
+    """Empaqueta el asset final y **ensena las dos variantes** y quien juzgo la auditable."""
+    conocidas = ["--destino"]
+    analizado = _banderas(argumentos, conocidas)
+    if analizado is None or not analizado[0]:
+        print("uso: videomesh glb <ruta> [--destino <perfil>]")
+        return 1
+    posicionales, valores = analizado
+    nombre = str(valores.get("--destino", perfiles.PERFIL_POR_DEFECTO))
+    informe = glb_final.empaquetar(
+        pathlib.Path(posicionales[0]), destino=perfiles.destino_declarado(nombre)
+    )
+    documento: dict[str, Any] = json.loads(informe.read_text(encoding="utf-8"))
+    medidas = documento["medidas"]
+    for clave in ("sin_ktx2", "con_ktx2"):
+        variante = medidas[clave]
+        extensiones = ", ".join(variante["extensiones"]) or "ninguna"
+        print(
+            f"glb: {variante['ruta']} · {variante['triangulos']} tri · "
+            f"{variante['bytes'] / 1024:.1f} KB · extensiones {extensiones}"
+        )
+    _resumen_del_juicio(documento["veredicto_del_vecino"])
+    for pendiente in documento.get("no_comprobado", []):
+        print(f"  {pendiente['que']}  NOT_RUN — {pendiente['motivo']}")
+    print(f"  informe: {informe}")
+    return 0
+
+
 def _lod(argumentos: Sequence[str]) -> int:
     """Encadena los niveles y **ensena la cadena**: un nivel por línea."""
     conocidas = ["--niveles"]
@@ -620,6 +662,7 @@ _ORDENES: dict[str, Callable[[Sequence[str]], int]] = {
     "lod": _lod,
     "material": _material,
     "colision": _colision,
+    "glb": _glb,
     "textura": _textura,
 }
 

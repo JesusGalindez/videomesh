@@ -23,7 +23,7 @@ from typing import Any
 
 from videomesh.adapters import pymeshlab, xatlas
 from videomesh.adapters.softsight import HERRAMIENTA
-from videomesh.application import retopologia, textura
+from videomesh.application import glb_final, retopologia, textura
 from videomesh.contracts.estado import (
     combinacion_declarada,
     combinaciones_admitidas,
@@ -119,6 +119,16 @@ def _proveedores() -> list[Comprobacion]:
             version="",
             instalacion=textura.INSTALACION,
             para="proyectar los fotogramas reales sobre la malla",
+        ),
+        comprobar_proveedor(
+            "Empaquetador de GLB",
+            nombre=glb_final.Gltfpack.proveedor,
+            instalado=glb_final.Gltfpack.instalado(),
+            # Su versión sí se puede leer sin empaquetar nada: `gltfpack` sin argumentos
+            # la imprime. Se declara la que esta cadena espera, que es la que midió.
+            version=glb_final.VERSION,
+            instalacion=glb_final.Gltfpack.instalacion,
+            para="empaquetar el GLB final con meshoptimizer y KTX2",
         ),
     ]
 

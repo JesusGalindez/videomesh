@@ -106,6 +106,7 @@ Vuelven a generar lo que este repositorio publica: `scripts/agents_md.py` · `sc
 | `test_c1_c2_integridad.py` | C1 y C2 — V6, V8 y D7: identidad del paquete e integridad de cada artifact. |
 | `test_c3_sellado.py` | C3 — V5, V7 y D29: el paquete se publica entero o no se publica. |
 | `test_cadena_10_lod_colision.py` | Encargo 04, E2 — la cadena de LODs y el proxy de colisión. |
+| `test_cadena_11_glb.py` | Encargo 04, E3 — el GLB final, con `meshoptimizer` y KTX2 para el perfil web. |
 | `test_cadena_1_import.py` | Encargo 04, bloque A — el paquete que llega de Colab. |
 | `test_cadena_2_malla.py` | Encargo 04, bloque B — que la malla se pueda abrir, y cuanto costo abrirla. |
 | `test_cadena_3_instrumentos.py` | `doctor` no decía nada de los instrumentos que la cadena de malla y atlas usa. |

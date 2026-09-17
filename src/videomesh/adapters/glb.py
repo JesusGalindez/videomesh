@@ -221,13 +221,18 @@ class Pieza:
     """Lo que un GLB de esta cadena contiene, releído del fichero.
 
     Es lo que las etapas que **visten o comprueban** necesitan: los vértices que se
-    escribieron, sus triángulos y sus UV. Un GLB con extensiones o con imágenes no
-    es de este escritor, y la lectura lo dice en vez de adivinar.
+    escribieron, sus triángulos, sus UV y sus normales cuando las hay. Las normales
+    entran desde E3 y no son un adorno: el mapa horneado en la etapa anterior se lee
+    **contra la normal de la malla**, y el empaquetado final tiene que transportar la
+    misma con la que se construyó el marco — recalcularla allí sería otro dato. Un GLB
+    con extensiones o con imágenes no es de este escritor, y la lectura lo dice en vez
+    de adivinar.
     """
 
     vertices: Any
     triangulos: Any
     uv: Any
+    normales: Any | None = None
 
 
 def leer_glb(ruta: pathlib.Path) -> Pieza:
@@ -261,19 +266,43 @@ def leer_glb(ruta: pathlib.Path) -> Pieza:
     primitiva = documento["meshes"][0]["primitives"][0]
     atributos = primitiva["attributes"]
 
-    def _arreglo(accesor_indice: int, forma: int, tipo: int) -> Any:
+    #: Cuantas componentes lleva cada tipo de accesor. El largo se calcula con **esto**
+    #: y no con lo que espere quien llama: un accesor `SCALAR` de 576 indices no pesa
+    #: 576 x 12 bytes, y leer mas de lo que hay es lo que hace que la vista de indices
+    #: se coma los bytes de la siguiente.
+    _COMPONENTES = {"SCALAR": 1, "VEC2": 2, "VEC3": 3}
+
+    def _arreglo(accesor_indice: int, tipo: int) -> Any:
         acceso = documento["accessors"][accesor_indice]
         if acceso["componentType"] != tipo:
             raise ValueError(
                 f"{ruta}: el accesor {accesor_indice} no es del tipo que este escritor declara"
             )
+        componentes = _COMPONENTES[acceso["type"]]
+        ancho = 4 * componentes
+        largo = int(acceso["count"]) * ancho
         vista = documento["bufferViews"][acceso["bufferView"]]
-        ancho = {5126: 4, 5125: 4}[tipo] * forma
-        crudo = binario[vista.get("byteOffset", 0) :][: acceso["count"] * ancho]
+        # Hasta donde acaba **la vista**, que no es donde acaba el bufer: la vista de
+        # indices de una pieza con normales no es la ultima, y leer de mas metia los
+        # bytes de la normal dentro de los indices —un vertice 3212836864 en una malla
+        # de 150— sin que nada lo dijera. El largo de la vista se respeta.
+        if largo > int(vista["byteLength"]):
+            raise ValueError(
+                f"{ruta}: el accesor {accesor_indice} pide {largo} bytes y su vista declara "
+                f"{vista['byteLength']}: el fichero no tiene lo que dice tener"
+            )
+        inicio = int(vista.get("byteOffset", 0))
+        crudo = binario[inicio : inicio + largo]
+        if len(crudo) != largo:
+            raise ValueError(
+                f"{ruta}: el accesor {accesor_indice} empieza en {inicio} y el bloque binario "
+                f"acaba antes de sus {largo} bytes"
+            )
         arreglo = np.frombuffer(crudo, dtype="<f4" if tipo == _FLOTANTE else "<u4")
-        return arreglo.reshape(-1, forma)
+        return arreglo.reshape(-1, componentes)
 
-    posiciones = _arreglo(atributos["POSITION"], 3, _FLOTANTE)
-    uv = _arreglo(atributos["TEXCOORD_0"], 2, _FLOTANTE)
-    triangulos = _arreglo(primitiva["indices"], 3, _ENTERO_SIN_SIGNO)
-    return Pieza(vertices=posiciones, triangulos=triangulos, uv=uv)
+    posiciones = _arreglo(atributos["POSITION"], _FLOTANTE)
+    uv = _arreglo(atributos["TEXCOORD_0"], _FLOTANTE)
+    triangulos = _arreglo(primitiva["indices"], _ENTERO_SIN_SIGNO).reshape(-1, 3)
+    normales = _arreglo(atributos["NORMAL"], _FLOTANTE) if "NORMAL" in atributos else None
+    return Pieza(vertices=posiciones, triangulos=triangulos, uv=uv, normales=normales)

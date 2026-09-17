@@ -12,6 +12,7 @@ normales     el detalle que el decimado quito, de vuelta como mapa
 lod          la cadena de niveles, cada uno decimado del anterior
 material     declara el material que ata la pieza y sus mapas
 colision     el proxy convexo; su contencion la juzga el vecino
+glb          el asset final: meshoptimizer y KTX2, en dos variantes
 textura      los fotogramas reales proyectados sobre la malla   sin instrumento hoy
 ```
 
@@ -55,10 +56,12 @@ from videomesh.adapters import xatlas
 from videomesh.application import (
     colision,
     decimado,
+    glb_final,
     limpieza,
     lod,
     material,
     normales,
+    perfiles,
     retopologia,
     textura,
     uv,
@@ -109,6 +112,7 @@ CADENA: tuple[str, ...] = (
     lod.ETAPA,
     material.ETAPA,
     colision.ETAPA,
+    glb_final.ETAPA,
     textura.ETAPA,
 )
 
@@ -136,6 +140,10 @@ _DEPENDE_DE: dict[str, tuple[str, ...]] = {
     material.ETAPA: (normales.ETAPA,),
     # El proxy sale de la malla de trabajo; el asset lo compara contra la maestra.
     colision.ETAPA: (normales.ETAPA,),
+    # El GLB final empaqueta la pieza con atlas y su mapa: lo que espera es el horneado,
+    # no el material —el que declara canales es el asset que el vecino audita, y el
+    # empaquetado vuelve a declarar el suyo sobre su propio fichero—.
+    glb_final.ETAPA: (normales.ETAPA,),
     textura.ETAPA: (material.ETAPA,),
 }
 
@@ -144,6 +152,7 @@ _DEPENDE_DE: dict[str, tuple[str, ...]] = {
 _SIN_INSTRUMENTO: dict[str, Callable[[], str | None]] = {
     retopologia.ETAPA: retopologia.motivo_de_ausencia,
     textura.ETAPA: textura.motivo_de_ausencia,
+    glb_final.ETAPA: glb_final.motivo_de_ausencia,
 }
 
 #: Que parametros usa cada etapa cuando todavia no hay informe. No son los que se
@@ -167,6 +176,10 @@ DEFECTOS_POR_DEFECTO: dict[str, dict[str, Any]] = {
     },
     material.ETAPA: {"destino": material.PRESET_POR_DEFECTO},
     colision.ETAPA: {},
+    glb_final.ETAPA: {
+        "destino": perfiles.destino_declarado(perfiles.PERFIL_POR_DEFECTO),
+        "gltfpack": glb_final.VERSION,
+    },
     textura.ETAPA: {},
 }
 
@@ -198,6 +211,10 @@ _MOTIVOS: dict[str, tuple[str, str]] = {
         "no se ha construido ningun proxy todavia",
         "ya no hay malla de trabajo de la que sacar el casco",
     ),
+    glb_final.ETAPA: (
+        "no se ha empaquetado ningun GLB final todavia",
+        "ya no hay pieza con mapa que empaquetar",
+    ),
     textura.ETAPA: (
         "no se ha proyectado ningun fotograma todavia",
         "ya no hay material sobre el que proyectar",
@@ -227,6 +244,8 @@ def _digest_de(proyecto: pathlib.Path, etapa: str, parametros: Mapping[str, Any]
         return lod_digest(proyecto, parametros)
     if etapa == colision.ETAPA:
         return colision_digest(proyecto, parametros)
+    if etapa == glb_final.ETAPA:
+        return glb_final.digest_de_la_entrada(proyecto, parametros=dict(parametros))
     # La retopologia no llega aqui: sin proveedor no hay ejecucion que comparar, y
     # `_paso` la declara antes de preguntar por su hash.
     return None

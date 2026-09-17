@@ -32,7 +32,7 @@ from typing import Any
 
 from videomesh.domain.errores import ErrorDeVideoMesh
 
-__all__ = ["PERFILES", "destino_declarado", "perfil_de"]
+__all__ = ["PERFIL_POR_DEFECTO", "PERFILES", "destino_declarado", "perfil_de"]
 
 #: El tope de triangulos del hero: lo que dejo `-si 0.06` sobre el GLB de 1.500.086.
 _TOPE_HERO = 90_004
@@ -67,6 +67,11 @@ PERFILES: dict[str, dict[str, Any]] = {
     "hero": _perfil("hero", triangulos=_TOPE_HERO, lado=_LADO_HERO),
     "fondo": _perfil("fondo", triangulos=_TOPE_FONDO, lado=_LADO_FONDO),
 }
+
+#: El que se usa cuando nadie dice otro. El hero es el perfil de mas detalle de los dos,
+#: y el defecto tiene que ser el que **mas** pide: un asset empaquetado de mas se puede
+#: bajar despues, y uno empaquetado de menos ya perdio lo que no estaba.
+PERFIL_POR_DEFECTO = "hero"
 
 
 def perfil_de(nombre: str) -> dict[str, Any]:
