@@ -21,7 +21,7 @@ import shutil
 from dataclasses import dataclass
 from typing import Any
 
-from videomesh.adapters import pymeshlab, xatlas
+from videomesh.adapters import gltf_validator, pymeshlab, xatlas
 from videomesh.adapters.softsight import HERRAMIENTA
 from videomesh.application import glb_final, retopologia, textura
 from videomesh.contracts.estado import (
@@ -129,6 +129,17 @@ def _proveedores() -> list[Comprobacion]:
             version=glb_final.VERSION,
             instalacion=glb_final.Gltfpack.instalacion,
             para="empaquetar el GLB final con meshoptimizer y KTX2",
+        ),
+        comprobar_proveedor(
+            "Validador de GLB",
+            nombre=gltf_validator.PROVEEDOR,
+            instalado=gltf_validator.instalado(),
+            # Su versión la dice el propio informe de cada validación, así que aquí no
+            # se declara ninguna: preguntarla sin validar nada sería ejecutarlo para
+            # adornar una fila.
+            version="",
+            instalacion=gltf_validator.INSTALACION,
+            para="que un GLB sea valido porque alguien lo comprobo, y no porque lo diga este",
         ),
     ]
 

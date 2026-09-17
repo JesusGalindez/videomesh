@@ -13,6 +13,7 @@ lod          la cadena de niveles, cada uno decimado del anterior
 material     declara el material que ata la pieza y sus mapas
 colision     el proxy convexo; su contencion la juzga el vecino
 glb          el asset final: meshoptimizer y KTX2, en dos variantes
+publicacion  el paquete sellado y el veredicto de la QA sobre el
 textura      los fotogramas reales proyectados sobre la malla   sin instrumento hoy
 ```
 
@@ -62,6 +63,7 @@ from videomesh.application import (
     material,
     normales,
     perfiles,
+    publicacion,
     retopologia,
     textura,
     uv,
@@ -113,6 +115,7 @@ CADENA: tuple[str, ...] = (
     material.ETAPA,
     colision.ETAPA,
     glb_final.ETAPA,
+    publicacion.ETAPA,
     textura.ETAPA,
 )
 
@@ -144,6 +147,9 @@ _DEPENDE_DE: dict[str, tuple[str, ...]] = {
     # no el material —el que declara canales es el asset que el vecino audita, y el
     # empaquetado vuelve a declarar el suyo sobre su propio fichero—.
     glb_final.ETAPA: (normales.ETAPA,),
+    # La publicacion sella **lo que la etapa glb produjo**: sus dos variantes y su
+    # mapa. Sin ese fichero no hay paquete, y por eso espera a que este hecha.
+    publicacion.ETAPA: (glb_final.ETAPA,),
     textura.ETAPA: (material.ETAPA,),
 }
 
@@ -180,6 +186,10 @@ DEFECTOS_POR_DEFECTO: dict[str, dict[str, Any]] = {
         "destino": perfiles.destino_declarado(perfiles.PERFIL_POR_DEFECTO),
         "gltfpack": glb_final.VERSION,
     },
+    publicacion.ETAPA: {
+        "destino": perfiles.destino_de_reparto(perfiles.DESTINO_POR_DEFECTO),
+        "piezas": list(perfiles.piezas_de_reparto(perfiles.DESTINO_POR_DEFECTO)),
+    },
     textura.ETAPA: {},
 }
 
@@ -215,6 +225,10 @@ _MOTIVOS: dict[str, tuple[str, str]] = {
         "no se ha empaquetado ningun GLB final todavia",
         "ya no hay pieza con mapa que empaquetar",
     ),
+    publicacion.ETAPA: (
+        "no se ha publicado ningun paquete todavia",
+        "ya no hay asset empaquetado que sellar",
+    ),
     textura.ETAPA: (
         "no se ha proyectado ningun fotograma todavia",
         "ya no hay material sobre el que proyectar",
@@ -246,6 +260,8 @@ def _digest_de(proyecto: pathlib.Path, etapa: str, parametros: Mapping[str, Any]
         return colision_digest(proyecto, parametros)
     if etapa == glb_final.ETAPA:
         return glb_final.digest_de_la_entrada(proyecto, parametros=dict(parametros))
+    if etapa == publicacion.ETAPA:
+        return publicacion.digest_de_la_entrada(proyecto, parametros=dict(parametros))
     # La retopologia no llega aqui: sin proveedor no hay ejecucion que comparar, y
     # `_paso` la declara antes de preguntar por su hash.
     return None

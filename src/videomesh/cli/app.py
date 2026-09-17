@@ -35,6 +35,7 @@ from videomesh.application import (
     material,
     normales,
     perfiles,
+    publicacion,
     retopologia,
     textura,
     uv,
@@ -108,6 +109,10 @@ La cadena de produccion:
                               empaqueta el asset final con meshoptimizer y KTX2, en
                               dos variantes, y publica el veredicto del vecino sobre
                               la que su cargador puede leer
+  videomesh publish <ruta> [--destino <nombre>]
+                              sella el paquete de produccion y lo pasa por la QA de
+                              SoftSight: PRODUCTION_READY, o UNKNOWN con la lista de
+                              lo que falta
   videomesh textura <ruta>
                               proyecta los fotogramas sobre la malla. Hoy no se
                               puede: falta TextureMesh de OpenMVS, y no se sustituye
@@ -379,6 +384,48 @@ def _material(argumentos: Sequence[str]) -> int:
         f"wrap {declarado['wrap']} · {declarado['alphaMode']}"
     )
     _resumen_del_juicio(documento["veredicto_del_vecino"])
+    print(f"  informe: {informe}")
+    return 0
+
+
+def _publish(argumentos: Sequence[str]) -> int:
+    """Publica el paquete y **ensena el veredicto de la QA**, o lo que falta.
+
+    El estado sale de su `readiness` y no se interpreta aquí: él decide qué es estar
+    listo, y traducir su veredicto daría un segundo criterio del mismo juicio.
+    """
+    conocidas = ["--destino"]
+    analizado = _banderas(argumentos, conocidas)
+    if analizado is None or not analizado[0]:
+        print("uso: videomesh publish <ruta> [--destino <nombre>]")
+        return 1
+    posicionales, valores = analizado
+    nombre = str(valores.get("--destino", perfiles.DESTINO_POR_DEFECTO))
+    informe = publicacion.publicar(
+        pathlib.Path(posicionales[0]), destino=perfiles.destino_de_reparto(nombre)
+    )
+    documento: dict[str, Any] = json.loads(informe.read_text(encoding="utf-8"))
+    medidas = documento["medidas"]
+    veredicto = medidas["veredicto"]
+    perfil = f" · perfil {medidas['perfil']}" if medidas.get("perfil") else ""
+    print(f"publicacion: {medidas['paquete']} · destino {medidas['destino']}{perfil}")
+    print(f"  artefactos                 {', '.join(medidas['piezas'])}")
+    validacion = medidas.get("validacion_externa")
+    if validacion is None:
+        print("  validador externo          NOT_RUN — sin validador de Khronos")
+    else:
+        print(
+            f"  validador externo          {validacion['proveedor']} {validacion['version']} · "
+            f"{validacion['errores']} errores · {validacion['avisos']} avisos"
+        )
+    print(f"  veredicto de la QA         {veredicto['estado']}")
+    for pendiente in veredicto.get("falta", []):
+        print(f"    {pendiente['id']}  {pendiente['estado']} — {pendiente['motivo']}")
+    if veredicto.get("comando"):
+        print(f"  comando                    {veredicto['comando']}")
+    _resumen_del_juicio(documento["veredicto_del_vecino"])
+    for pendiente in documento.get("no_comprobado", []):
+        print(f"  {pendiente['que']}  NOT_RUN — {pendiente['motivo']}")
     print(f"  informe: {informe}")
     return 0
 
@@ -663,6 +710,7 @@ _ORDENES: dict[str, Callable[[Sequence[str]], int]] = {
     "material": _material,
     "colision": _colision,
     "glb": _glb,
+    "publish": _publish,
     "textura": _textura,
 }
 

@@ -45,6 +45,7 @@ __all__ = [
     "HERRAMIENTA_DE_PRODUCCION",
     "distancia_de_superficie",
     "juicio_de_produccion",
+    "validacion_que_pediste",
 ]
 
 #: La herramienta publica del vecino, que es la unica puerta de medida que hay.
@@ -174,7 +175,10 @@ _SALIDAS_CON_INFORME = {0, 1, 11}
 
 
 def juicio_de_produccion(
-    activo: pathlib.Path, *, herramienta: pathlib.Path | None = None
+    activo: pathlib.Path,
+    *,
+    herramienta: pathlib.Path | None = None,
+    validacion_externa: pathlib.Path | None = None,
 ) -> dict[str, Any]:
     """El veredicto del vecino sobre un asset de produccion, o `MedicionNoDisponible`.
 
@@ -202,6 +206,11 @@ def juicio_de_produccion(
         )
 
     orden = ["node", str(instrumento), "inspect", str(activo)]
+    # El informe de un validador externo se **ingiere y no se ejecuta**: su `readiness`
+    # no aprueba sin él, y esa es toda la razón de que este parámetro exista. Se pasa
+    # por ruta y no por contenido porque su lector lee un fichero.
+    if validacion_externa is not None:
+        orden += ["--external", str(validacion_externa)]
     ejecucion = subprocess.run(orden, capture_output=True, text=True, check=False)
     if ejecucion.returncode not in _SALIDAS_CON_INFORME:
         raise MedicionNoDisponible(
@@ -219,3 +228,16 @@ def juicio_de_produccion(
         "salidas": {str(clave): valor for clave, valor in informe["readiness"]["byState"].items()},
         "informe": informe,
     }
+
+
+def validacion_que_pediste(informe: dict[str, Any]) -> dict[str, Any] | None:
+    """La validacion externa que el vecino digo haber leido, si la hubo.
+
+    Se publica **lo que el leyo** y no lo que se le paso: el comando y su informe son
+    suyos, y un `--external` que su version no entendiera saldria aqui como ausente en
+    vez de como aprobado.
+    """
+    externa = informe.get("externalValidation")
+    if not isinstance(externa, dict):
+        return None
+    return dict(externa)
