@@ -454,14 +454,19 @@ def decidir(
 ) -> Decision:
     """La decisión completa: qué rehacer, o por qué para.
 
-    El registro se mira **antes** de proponer nada: el techo y el freno mandan sobre
-    cualquier propuesta, que es lo que los hace un techo y no un aviso.
+    El orden importa y es el que impide que el techo mienta: primero se mira si hay algo
+    que rehacer, y solo si lo hay mandan el techo y el freno. Al revés, un asset que ya
+    está aprobado seguiría «parado» por las vueltas que gastó una versión anterior suya
+    contra otro destino — el techo frena un bucle activo, no sella un asset bueno.
     """
     ruta = pathlib.Path(proyecto)
     if olvidar:
         olvidar_intentos(ruta)
 
     hechos = intentos_de(ruta)
+    pendientes = propuestas(ruta)
+    if not pendientes:
+        return Decision((), None, len(hechos))
     if len(hechos) >= vueltas:
         return Decision(
             (),
@@ -471,10 +476,6 @@ def decidir(
             ),
             len(hechos),
         )
-
-    pendientes = propuestas(ruta)
-    if not pendientes:
-        return Decision((), None, len(hechos))
 
     # Las dos reglas del techo, y en este orden: primero la medida que motivó la vuelta
     # anterior, y después el freno de la distancia.

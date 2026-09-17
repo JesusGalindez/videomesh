@@ -441,10 +441,17 @@ def _juzgar(
 
 
 def _resumen_para_el_informe(juicio: dict[str, Any] | None, motivo: str | None) -> dict[str, Any]:
-    """La misma forma que publican las etapas anteriores, para que la CLI la lea igual."""
+    """La misma forma que publican las etapas anteriores, para que la CLI la lea igual.
+
+    El juicio crudo lleva el informe de produccion **anidado**, y ese documento ya vive
+    en `produccion.json` — escribirlo aqui otra vez seria la unica etapa que guarda dos
+    veces lo mismo, y la copia que envejece primero es la que miente. Se guarda el
+    juicio sin su informe: estado, certificacion, comando y salidas, que es lo que la
+    CLI lee y la prueba de con que veredicto se publico.
+    """
     if juicio is None:
         return {"estado": "NOT_RUN", "motivo": motivo or "sin motivo declarado"}
-    return juicio
+    return {clave: valor for clave, valor in juicio.items() if clave != "informe"}
 
 
 def _veredicto(
