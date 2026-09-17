@@ -108,6 +108,7 @@ Vuelven a generar lo que este repositorio publica: `scripts/agents_md.py` · `sc
 | `test_cadena_10_lod_colision.py` | Encargo 04, E2 — la cadena de LODs y el proxy de colisión. |
 | `test_cadena_11_glb.py` | Encargo 04, E3 — el GLB final, con `meshoptimizer` y KTX2 para el perfil web. |
 | `test_cadena_12_publicacion.py` | Encargo 04, E4 — el paquete de producción, sellado y pasado por la QA. |
+| `test_cadena_13_siguiente.py` | Encargo 04, bloque F — `videomesh next` y el techo del bucle. |
 | `test_cadena_1_import.py` | Encargo 04, bloque A — el paquete que llega de Colab. |
 | `test_cadena_2_malla.py` | Encargo 04, bloque B — que la malla se pueda abrir, y cuanto costo abrirla. |
 | `test_cadena_3_instrumentos.py` | `doctor` no decía nada de los instrumentos que la cadena de malla y atlas usa. |

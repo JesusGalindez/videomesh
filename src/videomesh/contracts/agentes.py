@@ -29,10 +29,10 @@ AGENTS = RAIZ / "AGENTS.md"
 #: puso roja por una copia en vez de por el fichero.
 #:
 #: El bloque de pruebas crece una linea por fichero. El encargo 04 anade uno por
-#: bloque —seis— asi que sube una vez y con motivo, no cada vez que molesta.
-#: El bloque E cierra con dos ficheros mas —`glb` (E3) y `publish` (E4)—, y el techo
-#: sube con ellos y no antes: son las dos ultimas lineas que este encargo anade.
-TECHO = 162
+#: bloque —seis— asi que sube una vez y con motivo, no cada vez que molesta. Las tres
+#: ultimas subidas son suyas y estan contadas: E3 (`glb`), E4 (`publish`) y F
+#: (`next`), que es el ultimo bloque del encargo. 160 -> 163, una linea por bloque.
+TECHO = 163
 
 
 class ErrorDeBloque(ErrorDeVideoMesh, RuntimeError):

@@ -37,6 +37,7 @@ from videomesh.application import (
     perfiles,
     publicacion,
     retopologia,
+    siguiente,
     textura,
     uv,
 )
@@ -113,6 +114,10 @@ La cadena de produccion:
                               sella el paquete de produccion y lo pasa por la QA de
                               SoftSight: PRODUCTION_READY, o UNKNOWN con la lista de
                               lo que falta
+  videomesh next <ruta> [--vueltas <n>] [--olvidar]
+                              dice que etapa rehacer y con que parametro, sin
+                              ejecutarla. Para cuando una vuelta no mejora o la
+                              distancia contra la malla medida empeora
   videomesh textura <ruta>
                               proyecta los fotogramas sobre la malla. Hoy no se
                               puede: falta TextureMesh de OpenMVS, y no se sustituye
@@ -385,6 +390,43 @@ def _material(argumentos: Sequence[str]) -> int:
     )
     _resumen_del_juicio(documento["veredicto_del_vecino"])
     print(f"  informe: {informe}")
+    return 0
+
+
+def _next(argumentos: Sequence[str]) -> int:
+    """Dice qué etapa rehacer y con qué parámetro, y **no la ejecuta**.
+
+    Una línea por fallo, y el techo del bucle delante: si ya se agotaron las vueltas o la
+    última no mejoró lo que la motivó, lo que se imprime es la parada. Código 0 cuando
+    hay algo que hacer —o cuando no hay nada—, y 2 cuando el bucle para, que no es ni un
+    éxito ni un error.
+    """
+    reiniciar = "--olvidar" in argumentos
+    limpios = [argumento for argumento in argumentos if argumento != "--olvidar"]
+    analizado = _banderas(limpios, ["--vueltas"])
+    if analizado is None or not analizado[0]:
+        print("uso: videomesh next <ruta> [--vueltas <n>] [--olvidar]")
+        return 1
+    posicionales, valores = analizado
+    try:
+        vueltas = int(valores.get("--vueltas", siguiente.MAX_VUELTAS))
+    except ValueError:
+        print("hacen falta numeros en --vueltas")
+        return 1
+
+    proyecto = pathlib.Path(posicionales[0])
+    decision = siguiente.decidir(proyecto, vueltas=vueltas, olvidar=reiniciar)
+    if decision.parada is not None:
+        print(f"PARA: {decision.parada}")
+        return 2
+    if not decision.rehacer:
+        print("no hay nada que rehacer: la ultima publicacion no deja ningun fallo abierto")
+        return 0
+
+    print(f"vueltas dadas: {decision.vueltas} de {vueltas}")
+    for rehacer in decision.rehacer:
+        print(f"  {rehacer.linea(proyecto)}")
+    print("  (esto es lo que habria que rehacer; `next` no lo ejecuta)")
     return 0
 
 
@@ -711,6 +753,7 @@ _ORDENES: dict[str, Callable[[Sequence[str]], int]] = {
     "colision": _colision,
     "glb": _glb,
     "publish": _publish,
+    "next": _next,
     "textura": _textura,
 }
 
